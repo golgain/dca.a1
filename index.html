@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ডিজিটাল প্রেসক্রিপশন স্টুডিও (Rx Pro)</title>
+  <meta name="theme-color" content="#0284c7">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* DESKTOP A4 PREVIEW CONTAINER */
+    @media screen and (min-width: 830px) {
+      .a4-viewport {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        width: 100%;
+        padding: 10px 0;
+      }
+      .a4-page {
+        width: 210mm;
+        height: 296mm;
+        max-height: 296mm;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 8mm 11mm 6mm 11mm;
+        position: relative;
+        overflow: hidden !important;
+        transform-origin: top center;
+      }
+    }
+
+    /* MOBILE & TABLET FLUID RESPONSIVE VIEW */
+    @media screen and (max-width: 829px) {
+      .a4-viewport {
+        width: 100%;
+        padding: 4px;
+      }
+      .a4-page {
+        width: 100% !important;
+        min-height: auto;
+        padding: 10px !important;
+        background: white;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        border-radius: 8px;
+        overflow-x: hidden;
+      }
+      .mobile-stack {
+        flex-direction: column !important;
+      }
+      .mobile-full-w {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px dashed #cbd5e1;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+      }
+    }
+
+    /* CRITICAL A4 PRINT FIX: STRICT SINGLE PAGE LOCK */
+    @page {
+      size: A4 portrait;
+      margin: 0 !important;
+    }
+
+    @media print {
+      html, body {
+        width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        overflow: hidden !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .tab-view {
+        display: none !important;
+      }
+      #tabPreviewView {
+        display: block !important;
+      }
+      .a4-viewport {
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+      .a4-page {
+        width: 210mm !important;
+        height: 296.5mm !important;
+        max-height: 296.5mm !important;
+        margin: 0 !important;
+        padding: 7mm 10mm 4mm 10mm !important;
+        box-shadow: none !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        page-break-before: avoid !important;
+        overflow: hidden !important;
+        transform: scale(var(--print-auto-zoom, 1)) !important;
+        transform-origin: top center !important;
+      }
+      .prescription-body {
+        flex-direction: row !important;
+        display: flex !important;
+        page-break-inside: avoid !important;
+      }
+      .mobile-full-w {
+        width: 32% !important;
+        border-right: 1px solid #cbd5e1 !important;
+        border-bottom: none !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+      }
+      .med-col-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+      }
+      .med-col-single {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+      }
+      [contenteditable="true"] {
+        border-color: transparent !important;
+        outline: none !important;
+        background: transparent !important;
+      }
+    }
+
+    /* Editable Styling */
+    [contenteditable="true"]:hover {
+      background-color: rgba(224, 242, 254, 0.4);
+      border-radius: 3px;
+    }
+    [contenteditable="true"]:focus {
+      outline: 2px solid #0284c7;
+      background-color: #f0f9ff;
+      border-radius: 3px;
+    }
+
+    /* Autocomplete dropdown list */
+    .autocomplete-items {
+      position: absolute;
+      border: 1px solid #cbd5e1;
+      border-top: none;
+      z-index: 99999;
+      background-color: #ffffff;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+      max-height: 190px;
+      overflow-y: auto;
+    }
+    .autocomplete-item {
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .autocomplete-item:hover {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      font-weight: 600;
+    }
+
+    /* Medicine CSS Counter: Deleting any medicine never breaks the 1, 2, 3 numbering sequence */
+    .med-counter {
+      counter-reset: med-idx;
+    }
+    .med-row {
+      counter-increment: med-idx;
+    }
+    .med-number::before {
+      content: counter(med-idx) ". ";
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    /* Bottom App Bar safe area padding */
+    .has-bottom-nav {
+      padding-bottom: 74px;
+    }
+  </style>
+<style id="fixcss">
+    /* layout follows ONE breakpoint (830px), not Tailwind's md:, so tablets/"desktop site" never squeeze the medicine column */
+    @media screen and (max-width: 829px) {
+      .prescription-body { flex-direction: column !important; }
+      .mobile-full-w { width: 100% !important; }
+    }
+    @media screen and (min-width: 830px) {
+      .prescription-body { flex-direction: row !important; }
+      .mobile-full-w { width: 32% !important; border-right: 1px solid #cbd5e1 !important; border-bottom: none !important; padding-bottom: 0 !important; margin-bottom: 0 !important; padding-right: .625rem !important; }
+      .header-section > div { flex-direction: row !important; align-items: flex-start !important; }
+      .header-section > div > div:first-child { text-align: left !important; }
+      .header-section > div > div:last-child { text-align: right !important; }
+      .footer-contact { flex-direction: row !important; }
+    }
+
+    .tab-view.hidden { display: none !important; }
+    [data-ph]:empty::before { content: attr(data-ph); color: #94a3b8; font-style: italic; font-weight: 400; }
+    span[data-ph]:empty { display: inline-block; min-width: 28px; }
+    @media screen { div[data-ph]:empty, h3[data-ph]:empty, p[data-ph]:empty { min-height: 1.2em; } }
+    @media (hover: none) { .med-row .no-print, li.group > .no-print { opacity: .55 !important; } }
+    #docBody { white-space: pre-wrap; word-break: break-word; }
+    .blank-pad-active .prescription-body { display: none !important; }
+    .blank-pad-active .blank-rx-body { display: flex !important; }
+    #printSheet { display: none; }
+    /* identical A4 print geometry for measuring (.print-sim) and for the print sheet (.print-lay), independent of screen width */
+    .print-sim .prescription-body, .print-lay .prescription-body { flex-direction: row !important; }
+    .print-sim .mobile-full-w, .print-lay .mobile-full-w { width: 32% !important; border-right: 1px solid #cbd5e1 !important; border-bottom: none !important; padding-bottom: 0 !important; margin-bottom: 0 !important; padding-right: .625rem !important; }
+    .print-sim .med-col-grid, .print-lay .med-col-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 6px !important; }
+    .print-sim .med-col-single, .print-lay .med-col-single { display: grid !important; grid-template-columns: 1fr !important; }
+    .print-sim .header-section > div, .print-lay .header-section > div { flex-direction: row !important; align-items: flex-start !important; }
+    .print-sim .header-section > div > div:first-child, .print-lay .header-section > div > div:first-child { text-align: left !important; }
+    .print-sim .header-section > div > div:last-child, .print-lay .header-section > div > div:last-child { text-align: right !important; }
+    .print-sim .header-section h2, .print-lay .header-section h2 { font-size: 1.5rem !important; line-height: 2rem !important; }
+    .print-sim .header-section p[id^="hdrDegree"], .print-lay .header-section p[id^="hdrDegree"] { font-size: 11px !important; }
+    .print-sim .footer-contact, .print-lay .footer-contact { flex-direction: row !important; }
+    .print-sim .footer-contact > div:first-child, .print-lay .footer-contact > div:first-child { text-align: left !important; }
+    .print-sim .footer-contact > div:last-child, .print-lay .footer-contact > div:last-child { text-align: right !important; }
+    .print-sim > * { zoom: 1 !important; }
+    /* A4 sheet on screen (tablet-landscape / desktop / phone "desktop site"): content scales to stay inside one page */
+    @media screen and (min-width: 830px) { .a4-page > * { zoom: var(--fitScr, 1); } }
+    /* desktop sidebar */
+    @media screen and (min-width: 1100px) {
+      body.has-bottom-nav { padding-bottom: 0; }
+      nav.fixed { top: var(--hdrH, 60px); bottom: 0; left: 0; right: auto; width: 88px; border-top: 0; border-right: 1px solid #e2e8f0; box-shadow: 2px 0 10px rgba(0,0,0,.05); }
+      nav.fixed > div { max-width: none; height: auto; flex-direction: column; justify-content: flex-start; gap: 6px; padding: 10px 6px; }
+      nav .bottom-nav-item { flex: 0 0 auto; width: 100%; padding: 10px 2px; border-radius: 10px; text-align: center; }
+      nav .bottom-nav-item.active { background: #e0f2fe; }
+      main { margin: 0 0 0 88px !important; max-width: none !important; padding: 14px 24px !important; }
+    }
+    /* PRINT: fits whatever paper is chosen (A4 / Letter / ...) on ONE page */
+    @media print {
+      html, body { width: 100% !important; height: 100% !important; max-height: none !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; }
+      :root { --fit: var(--fitA4, 1); }
+      main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+      [data-ph]:empty::before { content: none !important; }
+      body.sheet-on > *:not(#printSheet) { display: none !important; }
+      body.sheet-on #printSheet { display: block !important; width: 100% !important; height: calc(100% - 1mm) !important; overflow: hidden !important; margin: 0 !important; padding: 0 !important; }
+      #printSheet > .a4-page { width: 100% !important; height: 100% !important; max-height: none !important; min-height: 0 !important; margin: 0 !important; padding: 7mm 10mm 4mm 10mm !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; overflow: hidden !important; zoom: 1 !important; transform: none !important; }
+      #printSheet > .a4-page > * { zoom: var(--fit, 1); }
+      body.pad-mode #printSheet .header-section, body.pad-mode #printSheet .footer-section, body.pad-mode .header-section, body.pad-mode .footer-section { display: none !important; }
+      body.pad-mode #printSheet > .a4-page { padding: var(--padTop, 38mm) 10mm var(--padBot, 30mm) 10mm !important; }
+      body.lab-slip-mode .rx-med-column { display: none !important; }
+      body.lab-slip-mode .prescription-body { display: block !important; }
+      body.lab-slip-mode .mobile-full-w { width: 100% !important; border-right: none !important; }
+      body.lab-slip-mode .lab-slip-banner { display: block !important; }
+      body.lab-slip-mode #printSheet > .a4-page > * { zoom: 1 !important; }
+      html.thermal-mode, html.thermal-mode body { width: 80mm !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+      html.thermal-mode #printSheet { width: 80mm !important; height: auto !important; overflow: visible !important; }
+      html.thermal-mode #printSheet > .a4-page { width: 80mm !important; height: auto !important; padding: 3mm !important; overflow: visible !important; }
+      html.thermal-mode #printSheet > .a4-page > * { zoom: 1 !important; }
+      html.thermal-mode .prescription-body { flex-direction: column !important; }
+      html.thermal-mode .mobile-full-w { width: 100% !important; border-right: 0 !important; border-bottom: 1px dashed #94a3b8 !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
+      html.thermal-mode .med-col-grid, html.thermal-mode .med-col-single { grid-template-columns: 1fr !important; }
+    }
+    @media print and (min-aspect-ratio: 3/4) { :root { --fit: var(--fitLt, 1); } }
+  </style>
+  <style id="dynPage">@page{size:A4 portrait;margin:0}</style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 has-bottom-nav">
+
+  <!-- TOP APP HEADER -->
+  <header class="no-print bg-sky-800 text-white sticky top-0 z-40 shadow-md">
+    <div class="max-w-7xl mx-auto px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-2">
+        <span class="bg-white text-sky-800 font-black px-2 py-0.5 rounded text-base md:text-lg leading-none shadow">Rx</span>
+        <div>
+          <h1 class="font-bold text-xs md:text-base leading-tight" id="lblAppTitle">Rx Pro চেম্বার স্টুডিও</h1>
+          <p class="text-[9px] md:text-xs text-sky-200" id="lblAppSubtitle">A4 অটো-ফিট সিঙ্গেল পেজ • অফলাইন PWA</p>
+          <p id="chamberTag" class="text-[9px] md:text-xs text-amber-200 truncate max-w-[55vw]"></p>
+        </div>
+      </div>
+
+      <!-- Live Zoom & Capacity Indicator -->
+      <div class="flex items-center gap-1.5 md:gap-2" style="display:none">
+        <!-- Scale badge -->
+        <span id="zoomIndicatorBadge" class="bg-sky-900 border border-sky-600 px-2 py-0.5 rounded-full text-[10px] md:text-xs text-sky-200 font-mono" title="A4 Auto Shrink Zoom">
+          <i class="fa-solid fa-compress text-sky-400"></i> Zoom: <b id="zoomValueText" class="text-white">100%</b>
+        </span>
+
+        <!-- Capacity Pill -->
+        <div id="medCountBadge" class="bg-sky-900 border border-sky-600 px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold flex items-center gap-1">
+          <i class="fa-solid fa-pills text-sky-300"></i>
+          <span id="lblMedCountShort">ঔষধ:</span> <b id="currentCountText" class="text-white">১৪</b>/১৬
+          <span id="capacityStatus" class="bg-emerald-500 text-white text-[8px] md:text-[9px] px-1 py-0.2 rounded-full uppercase">নিরাপদ</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center flex-wrap gap-1.5 text-xs">
+        <button onclick="newPatient()" class="bg-sky-700 hover:bg-sky-600 p-1.5 md:px-2 rounded transition" title="নতুন রোগী"><i class="fa-solid fa-user-plus"></i></button>
+        <button id="chamberBtn" onclick="openChamberModal()" class="bg-sky-700 hover:bg-sky-600 p-1.5 md:px-2 rounded transition" title="চেম্বার / প্রতিষ্ঠান"><i class="fa-solid fa-hospital"></i></button>
+        <button onclick="openToolsDrawer()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 p-1.5 md:px-2 rounded transition" title="টুলস ও চিপস"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+        <!-- Undo / Redo -->
+        <button onclick="undoAction()" class="bg-sky-700 hover:bg-sky-600 p-1.5 md:px-2 rounded transition" title="আনডু (Ctrl+Z)">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button onclick="redoAction()" class="bg-sky-700 hover:bg-sky-600 p-1.5 md:px-2 rounded transition" title="রিডু (Ctrl+Y)">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+
+        <!-- Template Selector -->
+        <div class="flex items-center bg-sky-900/90 rounded px-1.5 py-1">
+          <i class="fa-solid fa-notes-medical text-amber-300 text-xs mr-1"></i>
+          <select id="templateSelector" onchange="applySelectedTemplate(this.value)" class="bg-transparent text-white text-[11px] md:text-xs focus:outline-none cursor-pointer max-w-[110px] md:max-w-[150px] truncate">
+            <option value="" class="text-slate-800">টেমপ্লেট বাছুন...</option>
+          </select>
+          <button onclick="saveCurrentAsTemplate()" class="ml-1 text-[10px] bg-sky-600 hover:bg-sky-500 text-white px-1.5 py-0.5 rounded" title="সেভ">+ সেভ</button>
+        </div>
+
+        <!-- Print / PDF Button -->
+        <button onclick="printPrescription()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded flex items-center gap-1 shadow-lg transition text-xs">
+          <i class="fa-solid fa-print"></i> <span id="lblPrintBtn">প্রিন্ট / PDF</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- NOTIFICATION BANNER / TOAST -->
+  <div id="toastAlert" class="no-print hidden fixed top-14 right-3 z-50 max-w-sm bg-amber-500 text-slate-900 px-3.5 py-2.5 rounded-lg shadow-2xl border border-amber-600 flex items-start gap-2.5 transition-all text-xs">
+    <i class="fa-solid fa-triangle-exclamation text-base mt-0.5 text-amber-950"></i>
+    <div class="flex-1">
+      <h6 class="font-bold text-slate-950" id="toastTitle">সতর্কবার্তা</h6>
+      <p id="toastMessage">স্বয়ংক্রিয় অ্যাডজাস্ট সম্পন্ন হয়েছে।</p>
+    </div>
+    <button onclick="dismissToast()" class="text-slate-900 font-bold hover:text-black">✕</button>
+  </div>
+
+  <!-- MAIN TAB CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-2 md:px-4 py-2">
+
+    <!-- TAB 1: PREVIEW / PRESCRIPTION CANVAS (Default Active) -->
+    <div id="tabPreviewView" class="tab-view block">
+      <div id="docToolbar" class="no-print hidden bg-white border border-sky-200 rounded-lg p-2 mb-2 flex flex-wrap items-center gap-2 text-xs">
+        <span class="font-bold text-sky-900"><i class="fa-solid fa-truck-medical"></i> জরুরি প্যাড / সার্টিফিকেট</span>
+        <select id="docType" onchange="docTypeChange(this.value)" class="border rounded px-2 py-1 bg-white">
+          <option value="emergency">জরুরি প্যাড (প্রেসক্রিপশন)</option>
+          <option value="illness">মেডিকেল সার্টিফিকেট (অসুস্থতা / বিশ্রাম)</option>
+          <option value="fitness">ফিটনেস সার্টিফিকেট</option>
+          <option value="referral">রেফারেল / হস্তান্তর চিঠি</option>
+          <option value="summary">মেডিকেল সামারি / রিপোর্ট</option>
+          <option value="blank">খালি পাতা (শুধু হেডার-ফুটার)</option>
+        </select>
+        <button onclick="docRefill()" class="bg-slate-100 border rounded px-2 py-1 font-semibold">রোগীর তথ্য আবার বসান</button>
+        <input id="docMedIn" list="docMedList" placeholder="ঔষধ যোগ (লাইব্রেরি থেকে)" class="border rounded px-2 py-1 flex-1 min-w-[140px]">
+        <datalist id="docMedList"></datalist>
+        <button onclick="docAddMed()" class="bg-sky-700 hover:bg-sky-800 text-white font-bold rounded px-2.5 py-1">+ যোগ</button>
+      </div>
+      <div class="a4-viewport">
+        
+        <!-- THE A4 SHEET -->
+        <div id="prescriptionCanvas" class="a4-page border border-slate-300">
+          <div class="lab-slip-banner hidden bg-sky-900 text-white text-center py-1 font-bold text-xs uppercase tracking-wider mb-2 rounded">LABORATORY INVESTIGATION &amp; TEST REQUISITION SLIP</div>
+
+          <!-- 1. HEADER: DOCTOR INFO & BRAND LOGO -->
+          <div class="header-section border-b-2 border-slate-700 pb-2">
+            <div class="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-2.5">
+              
+              <!-- Bangla Profile (Editable) -->
+              <div class="flex-1 text-center sm:text-left">
+                <h4 contenteditable="true" id="hdrSpecialistBn" class="text-[11px] font-bold text-rose-600 mb-0.5 tracking-wide">হৃদরোগ ও মেডিসিন বিশেষজ্ঞ</h4>
+                <h2 contenteditable="true" id="docNameBn" class="text-xl md:text-2xl font-black text-slate-900 leading-tight">ডাঃ মোঃ আবু জাহিদ বসুনিয়া</h2>
+                <p contenteditable="true" id="hdrDegreeBn" class="text-[10.5px] md:text-[11px] text-slate-700 leading-snug">এমবিবিএস (ঢাকা), বিসিএস (স্বাস্থ্য), এমডি (কার্ডিওলজি), এমএপিসি (ইউএসএ), এফএসিসি (ইউএসএ), এফইএসসি</p>
+                <p contenteditable="true" id="hdrDesignationBn" class="text-[11px] font-semibold text-slate-800 mt-0.5">সহকারী অধ্যাপক, কার্ডিওলজি বিভাগ</p>
+                <p contenteditable="true" id="hdrHospitalBn" class="text-[11px] font-bold text-sky-900">রংপুর মেডিকেল কলেজ ও হাসপাতাল</p>
+                <p contenteditable="true" id="hdrTrainingBn" class="text-[10px] text-slate-600 italic">(ইন্টারভেনশনাল কার্ডিওলজিতে উচ্চতর প্রশিক্ষণ প্রাপ্ত)</p>
+                <p contenteditable="true" id="hdrExtraBn" data-ph="অতিরিক্ত তথ্য (পদবি / প্রতিষ্ঠান)" class="text-[10.5px] font-semibold text-slate-700"></p>
+                <p contenteditable="true" id="hdrBmdcBn" class="text-[10.5px] font-bold text-slate-800 mt-0.5">BMDC Reg No. A-31789</p>
+              </div>
+
+              <!-- Middle: Brand Logo (Editable & Uploadable) -->
+              <div class="flex flex-col items-center justify-center px-1 shrink-0">
+                <div class="relative group cursor-pointer" onclick="triggerLogoUpload()" title="লোগো পরিবর্তন করতে ক্লিক করুন">
+                  <div id="logoContainer" class="w-12 h-12 md:w-13 md:h-13 rounded-lg bg-sky-600 text-white flex items-center justify-center text-3xl font-black shadow overflow-hidden border border-sky-700">
+                    <i class="fa-solid fa-plus text-2xl"></i>
+                  </div>
+                  <div class="no-print absolute inset-0 bg-black/60 text-white text-[8px] rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center text-center p-0.5">
+                    লোগো আপলোড
+                  </div>
+                </div>
+                <input type="file" id="logoInput" accept="image/*" class="hidden" onchange="handleLogoChange(event)">
+                <div class="no-print flex gap-2 mt-0.5"><button onclick="triggerLogoUpload()" class="text-[9px] text-sky-700 font-bold hover:underline">ছবি দিন</button><button onclick="removeLogo()" class="text-[9px] text-rose-500 hover:underline">মুছুন</button></div>
+              </div>
+
+              <!-- English Profile (Editable) -->
+              <div class="flex-1 text-center sm:text-right">
+                <h4 contenteditable="true" id="hdrSpecialistEn" class="text-[11px] font-bold text-rose-600 mb-0.5 tracking-wide uppercase">CARDIOLOGIST & MEDICINE SPECIALIST</h4>
+                <h2 contenteditable="true" id="docNameEn" class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Dr. Md. Abu Zahid Basunia</h2>
+                <p contenteditable="true" id="hdrDegreeEn" class="text-[10.5px] md:text-[11px] text-slate-700 leading-snug">MBBS (Dhaka), BCS (Health), MD (Cardiology), MACC (USA), FACP (USA), FESC</p>
+                <p contenteditable="true" id="hdrDesignationEn" class="text-[11px] font-semibold text-slate-800 mt-0.5">Assistant Professor, Cardiology Department</p>
+                <p contenteditable="true" id="hdrHospitalEn" class="text-[11px] font-bold text-sky-900">Rangpur Medical College & Hospital, Rangpur</p>
+                <p contenteditable="true" id="hdrTrainingEn" class="text-[10px] text-slate-600 italic">(Special Training in Interventional Cardiology)</p>
+                <p contenteditable="true" id="hdrExtraEn" data-ph="Additional line (position / affiliation)" class="text-[10.5px] font-semibold text-slate-700"></p>
+                <p contenteditable="true" id="hdrBmdcEn" class="text-[10.5px] font-bold text-slate-800 mt-0.5">BMDC Reg No. A-31789</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. PATIENT DEMOGRAPHICS BAR -->
+          <div class="patient-bar bg-slate-50 border-b border-slate-300 py-1 px-2 mt-1 text-xs text-slate-800 flex flex-wrap items-center justify-between gap-y-1">
+            <div class="flex items-center gap-1 min-w-[140px] flex-1">
+              <span class="font-bold text-slate-700" id="lblPatientName">Name:</span>
+              <span contenteditable="true" id="patientName" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-bold text-slate-950 px-1 min-w-[80px] focus:outline-none">মোহাম্মদ রহিম</span>
+            </div>
+            <div class="flex items-center gap-1 min-w-[55px]">
+              <span class="font-bold text-slate-700" id="lblPatientAge">Age:</span>
+              <span contenteditable="true" id="patientAge" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-semibold px-1 min-w-[28px] text-center focus:outline-none">৪৫Y</span>
+            </div>
+            <div class="flex items-center gap-1 min-w-[45px]">
+              <span class="font-bold text-slate-700" id="lblPatientSex">Sex:</span>
+              <span contenteditable="true" id="patientSex" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-semibold px-1 min-w-[22px] text-center focus:outline-none">M</span>
+            </div>
+            <div class="flex items-center gap-1 min-w-[75px]">
+              <span class="font-bold text-slate-700" id="lblPatientId">ID:</span>
+              <span contenteditable="true" id="patientId" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-semibold px-1 min-w-[45px] text-center focus:outline-none">308124</span>
+            </div>
+            <div class="flex items-center gap-1 min-w-[85px]">
+              <span class="font-bold text-slate-700" id="lblRxDate">Date:</span>
+              <span contenteditable="true" id="rxDate" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-semibold px-1 min-w-[65px] text-center focus:outline-none">21/10/2026</span>
+            </div>
+            <div class="flex items-center gap-1 min-w-[105px]"><span class="font-bold text-slate-700" id="lblPatientPhone">Phone:</span><span contenteditable="true" id="patientPhone" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-semibold px-1 min-w-[70px] focus:outline-none"></span></div>
+            <div class="flex items-center gap-1 min-w-[130px] flex-1">
+              <span class="font-bold text-slate-700" id="lblPatientAddress">Address:</span>
+              <span contenteditable="true" id="patientAddress" onblur="triggerAutoSave()" class="border-b border-dotted border-slate-400 font-semibold px-1 min-w-[60px] flex-1 focus:outline-none">রংপুর সদর</span>
+            </div>
+          </div>
+
+          <!-- 3. BODY: LEFT (CLINICAL VITALS, COMPLAINTS, HISTORY, DIAGNOSIS, INVESTIGATIONS, REFERRED, NOTES) & RIGHT (Rx) -->
+          <div class="prescription-body mobile-stack flex-1 flex flex-col md:flex-row gap-2.5 mt-1.5 overflow-hidden">
+            
+            <!-- LEFT COLUMN -->
+            <div class="mobile-full-w w-full md:w-[32%] md:border-r border-slate-300 md:pr-2.5 flex flex-col gap-1.5 text-xs">
+              
+              <!-- Clinical Vitals -->
+              <div class="bg-sky-50/70 p-1.5 rounded border border-sky-100">
+                <h5 class="text-[9.5px] font-bold text-sky-900 uppercase tracking-wider mb-0.5" id="lblVitalsHdr">CLINICAL VITALS</h5>
+                <div class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-slate-700 text-[10.5px]">
+                  <div><span class="font-semibold">BP:</span> <span contenteditable="true" class="font-bold">130/85</span></div>
+                  <div><span class="font-semibold">Pulse:</span> <span contenteditable="true" class="font-bold">78/m</span></div>
+                  <div><span class="font-semibold">Weight:</span> <span contenteditable="true" class="font-bold">68 kg</span></div>
+                  <div><span class="font-semibold">Temp:</span> <span contenteditable="true" class="font-bold">98.4°F</span></div>
+                  <div><span class="font-semibold">SpO2:</span> <span contenteditable="true" class="font-bold">98%</span></div>
+                  <div><span class="font-semibold">RBS:</span> <span contenteditable="true" class="font-bold">7.2</span></div>
+                  <div class="col-span-2"><span class="font-semibold">Allergy:</span> <span contenteditable="true" class="font-bold"></span></div>
+                </div>
+              </div>
+
+              <!-- Chief Complaints -->
+              <div class="relative">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-[10px] font-bold text-sky-900 uppercase tracking-wide" id="lblChiefComplaints">CHIEF COMPLAINTS:</h5>
+                  <button onclick="addListItem('complaintsList', 'নতুন লক্ষণ')" class="no-print text-sky-600 hover:text-sky-800 text-[10px] font-bold">+ যোগ</button>
+                </div>
+                <ul id="complaintsList" class="list-disc pl-3.5 space-y-0.5 text-slate-800 text-[10.5px]">
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'complaints')" class="suggest-target">Chest pain on exertion (2 months)</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'complaints')" class="suggest-target">Shortness of breath on walking</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Past History -->
+              <div class="relative">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-[10px] font-bold text-sky-900 uppercase tracking-wide" id="lblPastHistory">PAST HISTORY:</h5>
+                  <button onclick="addListItem('historyList', 'নতুন ইতিহাস')" class="no-print text-sky-600 hover:text-sky-800 text-[10px] font-bold">+ যোগ</button>
+                </div>
+                <ul id="historyList" class="list-disc pl-3.5 space-y-0.5 text-slate-800 text-[10.5px]">
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'history')" class="suggest-target">Hypertension for 5 years</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'history')" class="suggest-target">Non-diabetic</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Diagnosis -->
+              <div class="relative">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-[10px] font-bold text-sky-900 uppercase tracking-wide" id="lblDiagnosis">DIAGNOSIS:</h5>
+                  <button onclick="addListItem('diagnosisList', 'সম্ভাব্য রোগ')" class="no-print text-sky-600 hover:text-sky-800 text-[10px] font-bold">+ যোগ</button>
+                </div>
+                <ul id="diagnosisList" class="list-disc pl-3.5 space-y-0.5 text-slate-800 text-[10.5px]">
+                  <li class="group relative font-semibold text-rose-900">
+                    <span contenteditable="true" oninput="showSuggest(event, 'diagnosis')" class="suggest-target">Stable Angina Pectoris</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                  <li class="group relative font-semibold text-rose-900">
+                    <span contenteditable="true" oninput="showSuggest(event, 'diagnosis')" class="suggest-target">Primary Hypertension</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Investigations -->
+              <div class="relative">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-[10px] font-bold text-sky-900 uppercase tracking-wide" id="lblInvestigations">INVESTIGATIONS:</h5>
+                  <button onclick="addListItem('investigationList', 'নতুন টেস্ট')" class="no-print text-sky-600 hover:text-sky-800 text-[10px] font-bold">+ যোগ</button>
+                </div>
+                <ul id="investigationList" class="list-disc pl-3.5 space-y-0.5 text-slate-800 text-[10.5px]">
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'investigations')" class="suggest-target">ECG (12 Leads)</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'investigations')" class="suggest-target">Echo 2D</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                  <li class="group relative">
+                    <span contenteditable="true" oninput="showSuggest(event, 'investigations')" class="suggest-target">Chest X-Ray P/A View</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- NEW FEATURE: REFERRED TO -->
+              <div class="relative bg-amber-50/60 p-1.5 rounded border border-amber-200/80">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-[10px] font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1">
+                    <i class="fa-solid fa-user-doctor text-[9px]"></i> <span id="lblReferredTo">REFERRED TO / রেফার্ড:</span>
+                  </h5>
+                  <button onclick="toggleReferredEmpty(this)" class="no-print text-[9px] text-amber-800 hover:underline">ক্লিয়ার</button>
+                </div>
+                <div contenteditable="true" id="referredToField" oninput="showSuggest(event, 'referred')" class="suggest-target text-[10.5px] text-slate-800 italic leading-snug">
+                  কার্ডিওলজি বহির্বিভাগ / ক্যাথল্যাব (প্রয়োজনে)
+                </div>
+              </div>
+
+              <!-- NEW FEATURE: SPECIAL NOTES & COMMENTS (মন্তব্য) -->
+              <div class="relative bg-slate-50 p-1.5 rounded border border-slate-200">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-[10px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1">
+                    <i class="fa-regular fa-comment-dots text-[9px]"></i> <span id="lblSpecialNotes">SPECIAL NOTES / মন্তব্য:</span>
+                  </h5>
+                </div>
+                <div contenteditable="true" id="specialNotesField" class="text-[10px] text-slate-600 leading-tight">
+                  জরুরি প্রয়োজনে দ্রুত ইমার্জেন্সিতে যোগাযোগ করুন। আগের সকল রিপোর্ট পরবর্তী সাক্ষাতে সাথে আনবেন।
+                </div>
+              </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Rx MEDICINE LIST (SMART AUTO 2-COLUMNS & EXACT 14 MEDS) -->
+            <div class="rx-med-column flex-1 flex flex-col justify-between overflow-hidden">
+              <div>
+                <!-- Rx Top Bar -->
+                <div class="flex items-center justify-between border-b border-sky-700 pb-0.5 mb-1">
+                  <span class="text-2xl md:text-3xl font-black text-sky-800 font-serif leading-none">℞</span>
+                  <div class="flex items-center gap-1.5">
+                    <button onclick="addMedicineRow()" class="no-print bg-sky-100 hover:bg-sky-200 text-sky-900 px-2.5 py-0.5 rounded text-xs font-bold flex items-center gap-1 transition">
+                      <i class="fa-solid fa-plus-circle text-sky-700"></i> <span id="lblAddMedBtn">ঔষধ যোগ</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- MEDICINE CONTAINER: CSS Counter ensures deleting never breaks numbering sequence -->
+                <div id="medEmpty" class="no-print hidden border-2 border-dashed border-sky-200 rounded-lg p-4 mb-1 text-center text-slate-500 text-xs space-y-2">
+                  <p class="font-bold text-sky-800">ঔষধ লেখার জায়গা</p>
+                  <p>ঔষধ যোগ করুন, অথবা ওপরের টেমপ্লেট থেকে ১৪ ঔষধের ফরম্যাট বেছে নিন।</p>
+                  <div class="flex justify-center gap-2"><button onclick="addMedicineRow()" class="bg-sky-700 text-white font-bold px-3 py-1 rounded">+ ঔষধ যোগ</button><button onclick="document.getElementById('templateSelector').focus()" class="bg-white border font-semibold px-3 py-1 rounded">টেমপ্লেট বাছুন</button></div>
+                </div>
+                <div id="medWarn" class="no-print hidden text-[10px] bg-amber-50 border border-amber-300 text-amber-900 rounded px-2 py-1 mb-1"></div>
+                <div id="medicineContainer" class="med-counter med-col-grid grid grid-cols-1 md:grid-cols-2 gap-x-2.5 gap-y-1">
+                  <!-- Initial 14 Medicines from image dynamically loaded -->
+                </div>
+              </div>
+
+              <!-- Bottom Advice / পরামর্শ -->
+              <div class="border-t border-slate-300 pt-1 mt-1">
+                <div class="flex justify-between items-center mb-0.5">
+                  <h5 class="text-xs font-bold text-slate-800" id="lblAdviceHdr">Advice / পরামর্শ:</h5>
+                  <button onclick="addAdviceItem()" class="no-print text-sky-600 hover:text-sky-800 text-[10px] font-bold">+ পরামর্শ যোগ</button>
+                </div>
+                <ul id="adviceList" class="list-disc pl-4 text-[10.5px] text-slate-700 space-y-0.5">
+                  <li class="group">
+                    <span contenteditable="true">লবণ ও চর্বিযুক্ত খাবার পরিহার করবেন। প্রতিদিন ৩০ মিনিট হাঁটবেন।</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                  <li class="group">
+                    <span contenteditable="true">বুকে তীব্র ব্যথা হলে দ্রুত নিকটস্থ হাসপাতালে যোগাযোগ করুন।</span>
+                    <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- DOCUMENT BODY: emergency pad / certificates / blank page (shown only in document mode) -->
+          <div class="blank-rx-body hidden flex-1 flex-col gap-2 mt-2">
+            <h3 id="docTitle" contenteditable="true" data-ph="শিরোনাম" class="text-center font-bold text-base text-sky-900 tracking-wide"></h3>
+            <div id="docBody" contenteditable="true" data-ph="এখানে লিখুন…" class="flex-1 min-h-[160px] text-[12px] leading-relaxed text-slate-800"></div>
+          </div>
+
+          <!-- 4. FOOTER: DOCTOR SIGNATURE & CLINIC INFO -->
+          <div class="footer-section border-t border-slate-300 pt-1.5 mt-1 text-[10.5px] text-slate-600">
+            <!-- Doctor Signature -->
+            <div class="flex justify-between items-end mb-1.5">
+              <p class="text-[9px] text-slate-500 italic" id="lblDisclaimer">* ব্যবস্থাপত্র ব্যতীত কোনো ওষুধ পরিবর্তনযোগ্য নহে।</p>
+              <div class="text-right">
+                <div class="relative inline-block text-center cursor-pointer" onclick="triggerSigUpload()" title="স্বাক্ষর আপলোড করতে ক্লিক করুন">
+                  <div id="sigContainer" class="h-7 w-32 flex items-end justify-center border-b border-slate-400">
+                    <span class="font-serif italic text-base font-bold text-sky-950">Dr. Basunia</span>
+                  </div>
+                  <input type="file" id="sigInput" accept="image/*" class="hidden" onchange="handleSigChange(event)">
+                </div>
+                <p contenteditable="true" class="text-[9.5px] font-bold text-slate-700 mt-0.5" id="lblDocSig">চিকিৎসকের স্বাক্ষর</p>
+                <div class="no-print flex justify-end gap-2"><button onclick="triggerSigUpload()" class="text-[9px] text-sky-700 font-bold hover:underline">স্বাক্ষর দিন</button><button onclick="removeSig()" class="text-[9px] text-rose-500 hover:underline">মুছুন</button></div>
+              </div>
+            </div>
+
+            <!-- Clinic Contact Box -->
+            <div class="footer-contact bg-slate-50 p-1.5 rounded border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-1">
+              <div class="text-center sm:text-left">
+                <h6 contenteditable="true" class="font-bold text-slate-800 text-[11px]">ডাক্টরস ডায়াগনস্টিক সেন্টার (ইউনিট-১)</h6>
+                <p contenteditable="true" class="text-[9.5px]">ধাপ, জেল রোড, রংপুর (সদর হাসপাতালের সামনে)</p>
+                <p contenteditable="true" class="text-[9.5px]">মোবাইল: ০১৭১৪-৮৮৪৮৫২, ০১৭৩৬-১৬৪৫২৭</p>
+              </div>
+
+              <div class="text-center px-2.5 py-0.5 bg-rose-600 text-white rounded shadow-sm">
+                <p contenteditable="true" class="font-bold text-[11px] leading-tight">অগ্রিম সিরিয়াল: ০১৭১১-৮৮৭৩৯৯</p>
+                <p contenteditable="true" class="text-[8.5px] text-rose-100">সময়: বিকাল ৪টা - রাত ৯টা (শুক্রবার বন্ধ)</p>
+              </div>
+
+              <div class="text-center sm:text-right">
+                <p contenteditable="true" class="font-bold text-slate-800 text-[11px]">হটলাইন: ০১৭০১-১৮১৮১৫</p>
+                <p contenteditable="true" class="text-[9.5px]">ইমেইল: info.ddcunit2@gmail.com</p>
+                <p contenteditable="true" class="text-[9.5px]">ওয়েব: www.ddcrangpur.com</p>
+              </div>
+            </div>
+
+            <div id="footerMulti" style="display:none"></div>
+
+            <div class="flex justify-between items-center text-[8px] text-slate-400 mt-0.5">
+              <span>* জরুরি প্রয়োজনে হটলাইনে যোগাযোগ করুন: ০১৭০১-১৮১৮১৫</span>
+              <span class="font-mono">Rx: <span id="rxCode">—</span> | System Architect: Jewel Rana | Rx Chamber Pro</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SETTINGS (সেটিংস) -->
+    <div id="tabSettingsView" class="tab-view hidden bg-white rounded-xl p-4 md:p-6 shadow border border-slate-200">
+      <div class="max-w-4xl mx-auto space-y-4 text-xs md:text-sm">
+        <div class="border-b pb-3">
+          <h2 class="text-lg md:text-xl font-bold text-sky-900 flex items-center gap-2"><i class="fa-solid fa-gear text-sky-600"></i> সেটিংস</h2>
+          <p class="text-xs text-slate-500">চেম্বার, প্রিন্ট, লাইব্রেরি, ডাটা ও নিরাপত্তা</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-3 border rounded-lg bg-sky-50/70 space-y-2">
+            <h4 class="font-bold text-sky-900"><i class="fa-solid fa-hospital mr-1"></i> চেম্বার / প্রতিষ্ঠান</h4>
+            <p>বর্তমান: <b id="hubChamber">—</b></p>
+            <button onclick="openChamberModal()" class="w-full bg-sky-700 hover:bg-sky-800 text-white font-bold py-2 rounded-lg">চেম্বার প্রোফাইল ম্যানেজ করুন</button>
+            <label class="flex items-center gap-2 font-semibold"><input type="checkbox" id="hubMulti" onchange="hubMulti(this)" class="w-4 h-4"> ফুটারে সব চেম্বারের ঠিকানা ও লোগো দেখান</label>
+            <p class="text-[11px] text-slate-500">নাম, ঠিকানা, লোগো, ID প্রিফিক্স, বসার দিন — প্রতিটি চেম্বারের আলাদা।</p>
+          </div>
+          <div class="p-3 border rounded-lg bg-slate-50 space-y-2">
+            <h4 class="font-bold text-slate-800"><i class="fa-solid fa-print mr-1"></i> প্রিন্ট সেটিংস</h4>
+            <label class="flex items-center gap-2 font-semibold"><input type="checkbox" id="hubPad" onchange="hubSet('pad',this)" class="w-4 h-4"> প্রিন্টেড প্যাড মোড (হেডার-ফুটার প্রিন্ট হবে না)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label>উপরে ফাঁকা (মিমি)<input type="number" id="hubPadTop" min="0" max="120" onchange="hubSet('padTop',this)" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label>
+              <label>নিচে ফাঁকা (মিমি)<input type="number" id="hubPadBot" min="0" max="120" onchange="hubSet('padBot',this)" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label>
+            </div>
+            <label class="flex items-center gap-2 font-semibold"><input type="checkbox" id="chkThermal" onchange="hubThermal(this.checked)" class="w-4 h-4"> থার্মাল প্রিন্টার মোড (৮০মিমি স্লিপ)</label>
+            <p class="text-[11px] text-slate-500">প্যাড মোডের মাপ সাদা কাগজে টেস্ট প্রিন্ট দিয়ে ঠিক করুন। প্রিন্ট সবসময় এক A4 পাতায় সীমিত থাকে।</p>
+          </div>
+          <div class="p-3 border rounded-lg bg-white space-y-2">
+            <h4 class="font-bold text-slate-800"><i class="fa-solid fa-image mr-1"></i> লোগো / ছবি ও স্বাক্ষর</h4>
+            <div class="flex items-center gap-3">
+              <div id="hubLogoPrev" class="w-14 h-14 rounded-lg border bg-slate-50 overflow-hidden flex items-center justify-center"></div>
+              <div class="flex flex-col gap-1.5 flex-1">
+                <label class="bg-sky-700 hover:bg-sky-800 text-white font-semibold py-1.5 rounded-lg text-center cursor-pointer">হেডারের মাঝের ছবি / লোগো<input type="file" accept="image/*" onchange="handleLogoChange(event)" class="hidden"></label>
+                <button onclick="removeLogo()" class="text-rose-600 font-semibold text-left">ছবি মুছুন</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div id="hubSigPrev" class="w-20 h-12 rounded-lg border bg-slate-50 overflow-hidden flex items-center justify-center"></div>
+              <div class="flex flex-col gap-1.5 flex-1">
+                <label class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-1.5 rounded-lg text-center cursor-pointer">ডাক্তারের স্বাক্ষর<input type="file" accept="image/*" onchange="handleSigChange(event)" class="hidden"></label>
+                <button onclick="removeSig()" class="text-rose-600 font-semibold text-left">স্বাক্ষর মুছুন</button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500">লোগো প্রতিটি চেম্বারের আলাদা সেভ হয়; স্বাক্ষর সব চেম্বারে একই।</p>
+          </div>
+          <div class="p-3 border rounded-lg bg-amber-50/70 space-y-2">
+            <h4 class="font-bold text-amber-950"><i class="fa-solid fa-pills mr-1"></i> লাইব্রেরি</h4>
+            <button onclick="openSettingsModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-2 rounded-lg">ঔষধ, লক্ষণ, ইতিহাস, রোগ, টেস্ট, রেফার্ড</button>
+            <button onclick="resetDefaultLibraries()" class="w-full bg-white border border-amber-400 text-amber-900 font-semibold py-1.5 rounded-lg">লাইব্রেরি ডিফল্টে রিসেট (আর্কাইভ অক্ষত)</button>
+          </div>
+          <div class="p-3 border rounded-lg bg-emerald-50/70 space-y-2">
+            <h4 class="font-bold text-emerald-900"><i class="fa-solid fa-database mr-1"></i> ডাটা ও ব্যাকআপ</h4>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="exportDatabaseJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"><i class="fa-solid fa-file-export"></i> ব্যাকআপ নামান</button>
+              <label class="bg-sky-700 hover:bg-sky-800 text-white font-semibold py-2 rounded-lg text-center cursor-pointer"><i class="fa-solid fa-file-import"></i> রিস্টোর<input type="file" accept=".json" onchange="importDatabaseJSON(event)" class="hidden"></label>
+            </div>
+            <button onclick="clearArchive()" class="w-full bg-white border border-rose-400 text-rose-700 font-semibold py-1.5 rounded-lg">সব রোগীর রেকর্ড মুছুন</button>
+            <p class="text-[11px] text-slate-500">ব্যাকআপে রোগীর রেকর্ড, টেমপ্লেট, লাইব্রেরি, চেম্বার প্রোফাইল ও লোগো/স্বাক্ষর থাকে। নিয়মিত নামিয়ে রাখুন।</p>
+          </div>
+          <div class="p-3 border rounded-lg bg-slate-50 space-y-2">
+            <h4 class="font-bold text-slate-800"><i class="fa-solid fa-lock mr-1"></i> অ্যাপ লক (PIN)</h4>
+            <p>অবস্থা: <b id="hubPin">বন্ধ</b></p>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="setPin()" class="bg-sky-700 text-white font-semibold py-1.5 rounded-lg">সেট</button>
+              <button onclick="lockNow()" class="bg-slate-700 text-white font-semibold py-1.5 rounded-lg">লক করুন</button>
+              <button onclick="removePin()" class="bg-white border text-slate-700 font-semibold py-1.5 rounded-lg">বন্ধ</button>
+            </div>
+            <p class="text-[11px] text-slate-500">এটি সহজ লক, এনক্রিপশন নয়। ডিভাইসের স্ক্রিন-লকও ব্যবহার করুন।</p>
+          </div>
+          <div class="p-3 border rounded-lg bg-slate-50 space-y-2">
+            <h4 class="font-bold text-slate-800"><i class="fa-solid fa-mobile-screen mr-1"></i> অ্যাপ ও অফলাইন</h4>
+            <p id="hubNet" class="text-slate-700">—</p>
+            <button onclick="installPWA()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg"><i class="fa-solid fa-download"></i> হোম স্ক্রিনে ইনস্টল করুন</button>
+          </div>
+        </div>
+        <details class="border rounded-lg p-3 bg-white">
+          <summary class="font-bold text-sky-900 cursor-pointer">ব্যবহার সহায়িকা</summary>
+          <ul class="list-disc pl-5 mt-2 space-y-1 text-slate-700">
+            <li>নতুন রোগীর জন্য হেডারের <b>নতুন রোগী</b> বাটন; টেমপ্লেট থেকে ঔষধ/টেস্ট এক ক্লিকে বসে।</li>
+            <li>ডোজ বদলাতে ঔষধের ডোজ-ঘরে ক্লিক করে 🪄 টুলস থেকে চিপ বেছে নিন।</li>
+            <li>টেস্ট লিখে <b>ল্যাব স্লিপ প্রিন্ট</b> করলে রোগী "টেস্ট চলছে" হিসেবে থাকে; রিপোর্ট নিয়ে এলে আর্কাইভ থেকে <b>লোড</b> করে চূড়ান্ত প্রিন্ট দিন।</li>
+            <li>প্রিন্ট দিলেই প্রেসক্রিপশন নিজে আর্কাইভে জমা হয়; লেখা বেশি হলে প্রিন্ট অটো-ফিট হয়ে এক পাতায় থাকে।</li>
+            <li>ঔষধের নিচের হলুদ সতর্কতা শুধু আপনার জন্য — ক্লিনিক্যাল সিদ্ধান্ত সবসময় আপনার।</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
+    <!-- TAB 3: STORAGE TAB (স্টোরেজ ও ডাটাবেজ) -->
+    <div id="tabStorageView" class="tab-view hidden bg-white rounded-xl p-4 md:p-6 shadow border border-slate-200">
+      <div class="max-w-4xl mx-auto space-y-5 text-xs md:text-sm">
+        <div class="border-b pb-3 flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h2 class="text-lg md:text-xl font-bold text-sky-900 flex items-center gap-2">
+              <i class="fa-solid fa-database text-sky-600"></i> রোগী ও প্রেসক্রিপশন আর্কাইভ</h2>
+            <p class="text-xs text-slate-500">প্রিন্ট করলেই জমা হয় • সার্চ করুন, লোড করে আবার ব্যবহার করুন</p>
+          </div>
+          
+        </div>
+
+        <!-- Saved Prescriptions Archive -->
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold text-slate-800 text-sm">সাম্প্রতিক সংরক্ষিত প্রেসক্রিপশন তালিকা:</h4>
+            <button onclick="saveCurrentPatientRecord()" class="bg-sky-600 hover:bg-sky-700 text-white px-2.5 py-1 rounded text-xs">
+              <i class="fa-solid fa-bookmark mr-1"></i> বর্তমান প্রেসক্রিপশন আর্কাইভে রাখুন
+            </button>
+          </div>
+          <div class="border rounded-lg overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead class="bg-slate-100 text-slate-700 text-[11px] uppercase">
+                <tr>
+                  <th class="p-2.5">রোগীর নাম</th>
+                  <th class="p-2.5">আইডি</th>
+                  <th class="p-2.5">তারিখ</th>
+                  <th class="p-2.5">রোগ নির্ণয়</th>
+                  <th class="p-2.5 text-right">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="savedPrescriptionTableBody" class="divide-y divide-slate-200 text-xs">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        </div>
+    </div>
+
+    <!-- TAB 4: ANALYTICS TAB (অ্যানালিটিক্স) -->
+    <div id="tabAnalyticsView" class="tab-view hidden bg-white rounded-xl p-4 md:p-6 shadow border border-slate-200">
+      <div class="max-w-4xl mx-auto space-y-5 text-xs md:text-sm">
+        <div class="border-b pb-3 flex justify-between items-center">
+          <div>
+            <h2 class="text-lg md:text-xl font-bold text-sky-900 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-sky-600"></i> চেম্বার অ্যানালিটিক্স ও রিপোর্ট
+            </h2>
+            <p class="text-xs text-slate-500">রোগীর সংখ্যা, ডায়াগনসিস ও ঔষধ ব্যবহারের লাইভ পরিসংখ্যান</p>
+          </div>
+          <button onclick="refreshAnalytics()" class="text-sky-600 hover:text-sky-800 font-bold text-xs"><i class="fa-solid fa-arrows-rotate"></i> রিফ্রেশ</button>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-sky-50 border border-sky-200 p-3 rounded-xl text-center">
+            <span class="text-sky-600 text-xs font-bold uppercase">মোট রোগী সেবা</span>
+            <h3 class="text-2xl font-black text-sky-950 mt-1" id="statTotalPatients">২৮</h3>
+            <p class="text-[10px] text-sky-700">ডিভাইসে সংরক্ষিত</p>
+          </div>
+          <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center">
+            <span class="text-rose-600 text-xs font-bold uppercase">কার্ডিয়াক রোগী</span>
+            <h3 class="text-2xl font-black text-rose-950 mt-1" id="statCardiacRatio">৭২%</h3>
+            <p class="text-[10px] text-rose-700">উচ্চ রক্তচাপ ও হার্ট</p>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center">
+            <span class="text-emerald-600 text-xs font-bold uppercase">গড় ঔষধ/প্রেসক্রিপশন</span>
+            <h3 class="text-2xl font-black text-emerald-950 mt-1" id="statAvgMeds">৮.২</h3>
+            <p class="text-[10px] text-emerald-700">নিয়মিত প্রেসক্রাইব</p>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 p-3 rounded-xl text-center">
+            <span class="text-purple-600 text-xs font-bold uppercase">পুরুষ / নারী অনুপাত</span>
+            <h3 class="text-2xl font-black text-purple-950 mt-1" id="statGenderRatio">৫৮:৪২</h3>
+            <p class="text-[10px] text-purple-700">পুরুষ : নারী</p>
+          </div>
+        </div>
+
+        <!-- Top Prescribed Medicines & Frequent Diagnoses -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="border rounded-xl p-3.5 bg-slate-50/50">
+            <h4 class="font-bold text-slate-800 text-sm mb-2.5 flex items-center gap-1.5"><i class="fa-solid fa-ranking-star text-amber-500"></i> সর্বাধিক প্রেসক্রাইব করা ঔষধসমূহ</h4>
+            <div class="space-y-2" id="analyticsTopMedsList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <div class="border rounded-xl p-3.5 bg-slate-50/50">
+            <h4 class="font-bold text-slate-800 text-sm mb-2.5 flex items-center gap-1.5"><i class="fa-solid fa-stethoscope text-sky-600"></i> প্রধান প্রধান ডায়াগনসিস সমূহ</h4>
+            <div class="space-y-2" id="analyticsTopDiagnosisList">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- NATIVE MOBILE APP LIKE BOTTOM NAVIGATION BAR -->
+  <nav class="no-print fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-2xl z-40">
+    <div class="max-w-lg mx-auto flex justify-around items-center h-14 px-1">
+      <button onclick="switchBottomNav('tabPreview')" id="navBtnPreview" class="bottom-nav-item active flex flex-col items-center justify-center flex-1 py-1 text-sky-700">
+        <i class="fa-solid fa-file-prescription text-lg"></i><span class="text-[10px] font-bold mt-0.5">প্রেসক্রিপশন</span>
+      </button>
+      <button onclick="switchBottomNav('tabEmergency')" id="navBtnEmergency" class="bottom-nav-item flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-sky-700">
+        <i class="fa-solid fa-truck-medical text-lg"></i><span class="text-[10px] font-bold mt-0.5">জরুরি প্যাড</span>
+      </button>
+      <button onclick="switchBottomNav('tabStorage')" id="navBtnStorage" class="bottom-nav-item flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-sky-700">
+        <i class="fa-solid fa-box-archive text-lg"></i><span class="text-[10px] font-bold mt-0.5">আর্কাইভ</span>
+      </button>
+      <button onclick="switchBottomNav('tabAnalytics')" id="navBtnAnalytics" class="bottom-nav-item flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-sky-700">
+        <i class="fa-solid fa-chart-pie text-lg"></i><span class="text-[10px] font-bold mt-0.5">অ্যানালিটিক্স</span>
+      </button>
+      <button onclick="switchBottomNav('tabSettings')" id="navBtnSettings" class="bottom-nav-item flex flex-col items-center justify-center flex-1 py-1 text-slate-500 hover:text-sky-700">
+        <i class="fa-solid fa-gear text-lg"></i><span class="text-[10px] font-bold mt-0.5">সেটিংস</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- AUTOCOMPLETE DROPDOWN CONTAINER -->
+  <div id="autocompleteDropdown" class="autocomplete-items hidden"></div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-fade-in">
+      <div class="bg-sky-800 text-white px-4 py-2.5 flex justify-between items-center">
+        <h3 class="font-bold text-sm md:text-base flex items-center gap-2">
+          <i class="fa-solid fa-sliders"></i> প্রেসক্রিপশন সেটিংস ও লাইব্রেরি
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-sky-200 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold px-4 pt-2 gap-2 overflow-x-auto">
+        <button onclick="switchSettingsTab('settingsMedicines')" id="setTabBtnMedicines" class="tab-btn px-3 py-1.5 border-b-2 border-sky-600 text-sky-700">ঔষধ লাইব্রেরি</button>
+        <button onclick="switchSettingsTab('settingsComplaints')" id="setTabBtnComplaints" class="tab-btn px-3 py-1.5 border-b-2 border-transparent text-slate-600">Complaints</button>
+        <button onclick="switchSettingsTab('settingsDiagnosis')" id="setTabBtnDiagnosis" class="tab-btn px-3 py-1.5 border-b-2 border-transparent text-slate-600">Diagnosis</button>
+        <button onclick="switchSettingsTab('settingsInvestigations')" id="setTabBtnInvestigations" class="tab-btn px-3 py-1.5 border-b-2 border-transparent text-slate-600">Investigations</button>
+        <button onclick="switchSettingsTab('settingsReferred')" id="setTabBtnReferred" class="tab-btn px-3 py-1.5 border-b-2 border-transparent text-slate-600">Referred To</button>
+        <button onclick="switchSettingsTab('settingsHistory')" id="setTabBtnHistory" class="tab-btn px-3 py-1.5 border-b-2 border-transparent text-slate-600">Past History</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto flex-1 text-xs">
+        <div id="settingsMedicines" class="set-tab-content">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="newMedInput" placeholder="Tab. Brand | Generic | Dose | Duration" class="border border-slate-300 rounded px-2.5 py-1.5 flex-1 focus:outline-sky-500">
+            <button onclick="addLibraryItem('medicines', 'newMedInput')" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-4 py-1.5 rounded">যোগ করুন</button>
+          </div>
+          <div class="border rounded-md divide-y max-h-72 overflow-y-auto" id="libMedicineList"></div>
+        </div>
+
+        <div id="settingsComplaints" class="set-tab-content hidden">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="newComplaintInput" placeholder="যেমন: Chest pain on exertion" class="border border-slate-300 rounded px-2.5 py-1.5 flex-1 focus:outline-sky-500">
+            <button onclick="addLibraryItem('complaints', 'newComplaintInput')" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-4 py-1.5 rounded">যোগ করুন</button>
+          </div>
+          <div class="border rounded-md divide-y max-h-72 overflow-y-auto" id="libComplaintList"></div>
+        </div>
+
+        <div id="settingsDiagnosis" class="set-tab-content hidden">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="newDiagInput" placeholder="যেমন: Stable Angina Pectoris" class="border border-slate-300 rounded px-2.5 py-1.5 flex-1 focus:outline-sky-500">
+            <button onclick="addLibraryItem('diagnosis', 'newDiagInput')" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-4 py-1.5 rounded">যোগ করুন</button>
+          </div>
+          <div class="border rounded-md divide-y max-h-72 overflow-y-auto" id="libDiagList"></div>
+        </div>
+
+        <div id="settingsInvestigations" class="set-tab-content hidden">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="newInvInput" placeholder="যেমন: ECG (12 Leads)" class="border border-slate-300 rounded px-2.5 py-1.5 flex-1 focus:outline-sky-500">
+            <button onclick="addLibraryItem('investigations', 'newInvInput')" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-4 py-1.5 rounded">যোগ করুন</button>
+          </div>
+          <div class="border rounded-md divide-y max-h-72 overflow-y-auto" id="libInvList"></div>
+        </div>
+
+        <div id="settingsHistory" class="set-tab-content hidden">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="newHistInput" placeholder="যেমন: Hypertension for 5 years" class="border border-slate-300 rounded px-2.5 py-1.5 flex-1 focus:outline-sky-500">
+            <button onclick="addLibraryItem('history', 'newHistInput')" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-4 py-1.5 rounded">যোগ করুন</button>
+          </div>
+          <div class="border rounded-md divide-y max-h-72 overflow-y-auto" id="libHistList"></div>
+        </div>
+
+        <div id="settingsReferred" class="set-tab-content hidden">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="newRefInput" placeholder="যেমন: কার্ডিওলজি বহির্বিভাগ / ক্যাথল্যাব" class="border border-slate-300 rounded px-2.5 py-1.5 flex-1 focus:outline-sky-500">
+            <button onclick="addLibraryItem('referred', 'newRefInput')" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-4 py-1.5 rounded">যোগ করুন</button>
+          </div>
+          <div class="border rounded-md divide-y max-h-72 overflow-y-auto" id="libRefList"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-100 px-4 py-2 border-t border-slate-200 flex justify-between items-center text-xs">
+        <button onclick="resetDefaultLibraries()" class="text-rose-600 hover:underline">ডিফল্ট লাইব্রেরিতে রিস্টোর করুন</button>
+        <button onclick="closeSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded font-semibold">সংরক্ষণ ও বন্ধ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT CONTROLLER -->
+  <script>
+    // --- EXACT 14 MEDICINES FROM YOUR UPLOADED IMAGE ---
+    const INITIAL_14_MEDICINES = [
+      { brand: "Tab. Pidogrel 75mg", generic: "(Clopidogrel)", dose: "০+১+০ — দুপুরে খাবারের পর", duration: "চলবে" },
+      { brand: "Tab. Cardicor 2.5mg", generic: "(Bisoprolol)", dose: "১+০+০ — সকালে খাবার পর", duration: "চলবে" },
+      { brand: "Tab. Telma 40mg", generic: "(Telmisartan)", dose: "০+০+১ — রাতে খাওয়ার পর", duration: "চলবে" },
+      { brand: "Tab. Citritol", generic: "(Potassium Citrate)", dose: "১+০+১ — খাবার পর", duration: "চলবে" },
+      { brand: "Cap. Uromax 0.4mg", generic: "(Tamsulosin)", dose: "০+০+১ — রাতে শোবার পূর্বে", duration: "চলবে" },
+      { brand: "Tab. Corangi 10mg", generic: "(Nicorandil)", dose: "১+০+১ — খাবার পর", duration: "চলবে" },
+      { brand: "Tab. Efodio 10mg", generic: "(Empagliflozin)", dose: "১+০+০ — সকালে খাবার পর", duration: "৭ দিন" },
+      { brand: "Tab. Fixx 20mg", generic: "(Furosemide)", dose: "১+০+০ — সকালে খাবার পর", duration: "৭ দিন" },
+      { brand: "Tab. Clonapin 0.5mg", generic: "(Clonazepam)", dose: "০+০+১ — রাতে খাবার পর", duration: "৭ দিন" },
+      { brand: "Tab. Prazopres 1mg", generic: "(Prazosin)", dose: "১+০+১ — খাবার পর", duration: "চলবে" },
+      { brand: "Cap. Maxpro 20mg", generic: "(Esomeprazole)", dose: "১+০+১ — খাবার ২০ মি. পূর্বে", duration: "১৪ দিন" },
+      { brand: "Tab. Napa Extend 665mg", generic: "(Paracetamol)", dose: "১+০+১ — খাবার পর", duration: "৫ দিন" },
+      { brand: "Tab. Calbo D", generic: "(Calcium + Vitamin D3)", dose: "০+১+০ — দুপুরে খাবার পর", duration: "১ মাস" },
+      { brand: "Syp. Tofen", generic: "(Ketotifen)", dose: "২ চামচ — রাতে শোবার সময়ে", duration: "১০ দিন" }
+    ];
+
+    const DEFAULT_STORAGE = {
+      medicines: [...INITIAL_14_MEDICINES],
+      complaints: [
+        "Chest pain on exertion (2 months)",
+        "Shortness of breath on walking",
+        "Palpitation & high blood pressure",
+        "Fever for 3 days (101°F)",
+        "Burning sensation in chest & acidity",
+        "Persistent dry cough (2 weeks)"
+      ],
+      history: [
+        "Hypertension for 5 years",
+        "Non-diabetic",
+        "Known diabetic (HbA1c 7.9%)",
+        "Ischemic Heart Disease (Old MI)",
+        "No known drug allergy"
+      ],
+      diagnosis: [
+        "Stable Angina Pectoris",
+        "Primary Hypertension",
+        "Type 2 Diabetes Mellitus",
+        "Hyperacidity / Dyspepsia",
+        "Acute Viral Pharyngitis"
+      ],
+      investigations: [
+        "ECG (12 Leads)",
+        "Echo 2D",
+        "Chest X-Ray P/A View",
+        "Serum Lipid Profile",
+        "Serum Creatinine",
+        "HbA1c & Fasting Blood Sugar"
+      ],
+      referred: [
+        "কার্ডিওলজি বহির্বিভাগ / ক্যাথল্যাব (প্রয়োজনে)",
+        "মেডিসিন বিশেষজ্ঞ / নিউরোলজিস্ট",
+        "নেফ্রোলজি বিভাগ",
+        "নিকটস্থ কার্ডিয়াক ইমার্জেন্সি"
+      ],
+      savedRecords: [],
+      templates: [
+        {
+          id: "original_14_cardiac",
+          name: "১৪ ঔষধ — কার্ডিয়াক স্পেশাল",
+          diagnosis: ["Stable Angina Pectoris", "Primary Hypertension"],
+          complaints: ["Chest pain on exertion (2 months)", "Shortness of breath on walking"],
+          history: ["Hypertension for 5 years", "Non-diabetic"],
+          investigations: ["ECG (12 Leads)", "Echo 2D", "Chest X-Ray P/A View"],
+          referred: "কার্ডিওলজি বহির্বিভাগ / ক্যাথল্যাব (প্রয়োজনে)",
+          notes: "জরুরি প্রয়োজনে দ্রুত ইমার্জেন্সিতে যোগাযোগ করুন। আগের সকল রিপোর্ট সাথে আনবেন।",
+          medicines: INITIAL_14_MEDICINES,
+          advice: ["লবণ ও চর্বিযুক্ত খাবার পরিহার করবেন। প্রতিদিন ৩০ মিনিট হাঁটবেন।", "বুকে তীব্র ব্যথা হলে দ্রুত নিকটস্থ হাসপাতালে যোগাযোগ করুন।"]
+        },
+        {
+          id: "no_medicine",
+          name: "ঔষধ ছাড়া — শুধু টেস্ট ও পরামর্শ",
+          diagnosis: [],
+          complaints: [],
+          history: [],
+          investigations: ["ECG (12 Leads)", "CBC with ESR"],
+          referred: "কোনো রেফার্ড নেই",
+          notes: "রিপোর্ট প্রস্তুত হলে সাথে নিয়ে পরবর্তী সাক্ষাতে আসবেন।",
+          medicines: [],
+          advice: ["রিপোর্ট সহ পুনরায় দেখা করবেন।"]
+        },
+        {
+          id: "general_fever",
+          name: "সাধারণ জ্বর ও সর্দি (১ কলাম মোড)",
+          diagnosis: ["Acute Viral Fever", "Hyperacidity"],
+          complaints: ["Fever for 3 days", "Body ache & headache"],
+          history: ["No major illness"],
+          investigations: ["CBC with ESR"],
+          referred: "প্রয়োজনে মেডিসিন বিভাগ",
+          notes: "জ্বর বাড়লে প্যারাসিটামল সেবন করুন ও প্রচুর পানি পান করুন।",
+          medicines: [
+            { brand: "Tab. Napa Extend 665mg", generic: "(Paracetamol)", dose: "১+১+১ — খাবার পর", duration: "৫ দিন" },
+            { brand: "Cap. Maxpro 20mg", generic: "(Esomeprazole)", dose: "১+০+১ — খাবার ২০ মি. পূর্বে", duration: "১৪ দিন" },
+            { brand: "Tab. Monas 10mg", generic: "(Montelukast)", dose: "০+০+১ — রাতে খাবার পর", duration: "১০ দিন" }
+          ],
+          advice: ["পর্যাপ্ত পানি ও তরল খাবার খাবেন।", "বিশ্রামে থাকবেন।"]
+        }
+      ]
+    };
+
+    // Load Data
+    let appData = null;
+    try { appData = JSON.parse(localStorage.getItem('rx_app_database') || 'null'); } catch (e) { appData = null; }
+    if (!appData) {
+      appData = JSON.parse(JSON.stringify(DEFAULT_STORAGE));
+      saveAppData();
+    }
+    function saveAppData() {
+      localStorage.setItem('rx_app_database', JSON.stringify(appData));
+    }
+
+    // --- CONTINUOUS AUTO-SAVE TO PREVENT DATA LOSS WHEN RESIZING/ROTATING ---
+    let autoSaveTimeout = null;
+    function triggerAutoSave() {
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        const currentData = {
+          patientName: document.getElementById('patientName').innerText.trim(),
+          patientAge: document.getElementById('patientAge').innerText.trim(),
+          patientSex: document.getElementById('patientSex').innerText.trim(),
+          patientId: document.getElementById('patientId').innerText.trim(),
+          rxDate: document.getElementById('rxDate').innerText.trim(),
+          patientAddress: document.getElementById('patientAddress').innerText.trim(),
+          referredTo: document.getElementById('referredToField').innerText.trim(),
+          specialNotes: document.getElementById('specialNotesField').innerText.trim(),
+          medicines: getDOMMedicines(),
+          complaints: Array.from(document.querySelectorAll('#complaintsList .suggest-target')).map(e => e.innerText.trim()),
+          history: Array.from(document.querySelectorAll('#historyList .suggest-target')).map(e => e.innerText.trim()),
+          diagnosis: Array.from(document.querySelectorAll('#diagnosisList .suggest-target')).map(e => e.innerText.trim()),
+          investigations: Array.from(document.querySelectorAll('#investigationList .suggest-target')).map(e => e.innerText.trim()),
+          advice: Array.from(document.querySelectorAll('#adviceList span[contenteditable="true"]')).map(e => e.innerText.trim())
+        };
+        localStorage.setItem('rx_working_state', JSON.stringify(currentData));
+        checkAutoZoomFit();
+      }, 300);
+    }
+
+    function getDOMMedicines() {
+      return Array.from(document.querySelectorAll('.med-row')).map(row => {
+        const fields = row.querySelectorAll('[contenteditable="true"]');
+        return {
+          brand: fields[0] ? fields[0].innerText.trim() : "",
+          generic: fields[1] ? fields[1].innerText.trim() : "",
+          dose: fields[2] ? fields[2].innerText.trim() : "",
+          duration: fields[3] ? fields[3].innerText.trim() : ""
+        };
+      });
+    }
+
+    // --- SMART AUTO-FIT ZOOM LOGIC (PREVENTS 2-PAGE BREAK) ---
+    function checkAutoZoomFit() {
+      const page = document.getElementById('prescriptionCanvas');
+      if (!page) return;
+
+      // Available target height in desktop/print is 296mm ~= 1118px at 96 DPI
+      const targetMaxHeightPx = 1115;
+      const actualScrollHeight = page.scrollHeight;
+
+      if (actualScrollHeight > targetMaxHeightPx) {
+        // Calculate needed zoom scale
+        let scale = targetMaxHeightPx / actualScrollHeight;
+        scale = Math.max(0.78, Math.min(1, scale - 0.02)); // Never shrink below 78% for readability
+        const pct = Math.round(scale * 100);
+
+        document.documentElement.style.setProperty('--print-auto-zoom', scale.toFixed(3));
+        document.getElementById('zoomValueText').innerText = pct + '%';
+        document.getElementById('zoomIndicatorBadge').classList.add('bg-amber-900', 'text-amber-200');
+
+        showToast("স্মার্ট অটো-ফিট কার্যকর", `লেখা বেশি হওয়ায় ফন্ট স্বয়ংক্রিয়ভাবে ${pct}% এ স্কেল করা হয়েছে যাতে প্রিন্ট কখনোই ২য় পাতায় না যায়।`);
+      } else {
+        document.documentElement.style.setProperty('--print-auto-zoom', '1');
+        document.getElementById('zoomValueText').innerText = '100%';
+        document.getElementById('zoomIndicatorBadge').classList.remove('bg-amber-900', 'text-amber-200');
+      }
+    }
+
+    // --- UNDO / REDO ---
+    let undoStack = [];
+    let redoStack = [];
+    function recordState() {
+      const canvas = document.getElementById('prescriptionCanvas');
+      if (!canvas) return;
+      undoStack.push(canvas.innerHTML);
+      if (undoStack.length > 25) undoStack.shift();
+      redoStack = [];
+    }
+    function undoAction() {
+      if (undoStack.length <= 1) return;
+      redoStack.push(undoStack.pop());
+      document.getElementById('prescriptionCanvas').innerHTML = undoStack[undoStack.length - 1];
+      updateMedicineGridAndCapacity();
+      triggerAutoSave();
+    }
+    function redoAction() {
+      if (redoStack.length === 0) return;
+      const next = redoStack.pop();
+      undoStack.push(next);
+      document.getElementById('prescriptionCanvas').innerHTML = next;
+      updateMedicineGridAndCapacity();
+      triggerAutoSave();
+    }
+
+    // --- MEDICINES MANAGEMENT ---
+    function renderMedicines(medList) {
+      const container = document.getElementById('medicineContainer');
+      container.innerHTML = '';
+      medList.forEach(m => {
+        container.appendChild(createMedicineNode(m.brand, m.generic, m.dose, m.duration));
+      });
+      updateMedicineGridAndCapacity();
+    }
+
+    function createMedicineNode(brand, generic, dose, duration) {
+      const div = document.createElement('div');
+      div.className = "med-row flex items-start justify-between border-b border-dashed border-slate-200 pb-1 relative group";
+      div.innerHTML = `
+        <div class="flex-1 pr-1">
+          <div class="flex items-center gap-1">
+            <span class="med-number text-[11px]"></span>
+            <span contenteditable="true" oninput="showSuggest(event, 'medicine_brand'); triggerAutoSave();" class="suggest-target font-bold text-slate-900 text-xs">${brand}</span>
+            <button onclick="removeMedicine(this)" class="no-print text-rose-500 hover:text-rose-700 opacity-0 group-hover:opacity-100 text-[10px] ml-1 transition" title="মুছে ফেলুন">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <div contenteditable="true" onblur="triggerAutoSave()" class="text-[10px] text-slate-500 italic pl-3 leading-tight">${generic}</div>
+          <div contenteditable="true" onblur="triggerAutoSave()" class="text-[10.5px] text-sky-800 font-semibold pl-3 leading-tight mt-0.5">${dose}</div>
+        </div>
+        <div class="text-right shrink-0">
+          <span contenteditable="true" onblur="triggerAutoSave()" class="inline-block text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-sky-100 text-sky-800">${duration}</span>
+        </div>
+      `;
+      return div;
+    }
+
+    function addMedicineRow() {
+      const currentCount = document.querySelectorAll('.med-row').length;
+      if (currentCount >= 16) {
+        showToast("সতর্কতা: পেজ ধারণক্ষমতা পূর্ণ", "ঔষধ অনেক হয়ে গেছে — প্রিন্ট এক পাতায় রাখতে অক্ষর অটো-ছোট হবে। খুব বেশি হলে কিছু কমান।");
+      }
+      recordState();
+      const container = document.getElementById('medicineContainer');
+      const node = createMedicineNode("Tab. নতুন ঔষধ", "(জেনেরিক নাম)", "১+০+১ — খাবারের পর", "৭ দিন");
+      container.appendChild(node);
+      updateMedicineGridAndCapacity();
+      triggerAutoSave();
+    }
+
+    function removeMedicine(btn) {
+      recordState();
+      const row = btn.closest('.med-row');
+      if (row) {
+        row.remove();
+        updateMedicineGridAndCapacity();
+        triggerAutoSave();
+      }
+    }
+
+    function updateMedicineGridAndCapacity() {
+      const container = document.getElementById('medicineContainer');
+      const rows = container.querySelectorAll('.med-row');
+      const count = rows.length;
+
+      document.getElementById('currentCountText').innerText = count;
+      const statusEl = document.getElementById('capacityStatus');
+
+      if (count <= 14) {
+        statusEl.className = "bg-emerald-500 text-white text-[8px] md:text-[9px] px-1 py-0.2 rounded-full uppercase";
+        statusEl.innerText = isBangla ? "নিরাপদ" : "SAFE";
+      } else if (count <= 16) {
+        statusEl.className = "bg-amber-500 text-slate-900 text-[8px] md:text-[9px] px-1 py-0.2 rounded-full uppercase font-bold";
+        statusEl.innerText = isBangla ? "সীমা শেষ" : "MAX";
+      } else {
+        statusEl.className = "bg-rose-600 text-white text-[8px] md:text-[9px] px-1 py-0.2 rounded-full uppercase font-bold animate-pulse";
+        statusEl.innerText = isBangla ? "ওভারফ্লো" : "OVER";
+      }
+
+      // Column Auto-Switching: 1 Column for <= 7 meds, 2 Columns for > 7 meds
+      if (count <= 7) {
+        container.classList.remove('md:grid-cols-2', 'med-col-grid');
+        container.classList.add('grid-cols-1', 'med-col-single');
+      } else {
+        container.classList.remove('med-col-single');
+        container.classList.add('grid-cols-1', 'md:grid-cols-2', 'med-col-grid');
+      }
+
+      checkAutoZoomFit();
+      syncPdfFilename();
+    }
+
+    // --- LIST HANDLERS ---
+    function addListItem(listId, defaultText) {
+      recordState();
+      const ul = document.getElementById(listId);
+      const li = document.createElement('li');
+      li.className = "group relative";
+      let cat = 'complaints';
+      if (listId === 'historyList') cat = 'history';
+      if (listId === 'diagnosisList') cat = 'diagnosis';
+      if (listId === 'investigationList') cat = 'investigations';
+
+      li.innerHTML = `
+        <span contenteditable="true" oninput="showSuggest(event, '${cat}'); triggerAutoSave();" class="suggest-target">${defaultText}</span>
+        <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      ul.appendChild(li);
+      triggerAutoSave();
+    }
+
+    function removeListItem(btn) {
+      recordState();
+      const li = btn.closest('li');
+      if (li) li.remove();
+      triggerAutoSave();
+    }
+
+    function addAdviceItem() {
+      recordState();
+      const ul = document.getElementById('adviceList');
+      const li = document.createElement('li');
+      li.className = "group";
+      li.innerHTML = `
+        <span contenteditable="true" onblur="triggerAutoSave()">নতুন পরামর্শ লিখুন...</span>
+        <button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>
+      `;
+      ul.appendChild(li);
+      triggerAutoSave();
+    }
+
+    function toggleReferredEmpty(btn) {
+      recordState();
+      document.getElementById('referredToField').innerText = "কোনো রেফার্ড নেই";
+      triggerAutoSave();
+    }
+
+    // --- AUTOCOMPLETE DROPDOWN (MS Word Style) ---
+    const drop = document.getElementById('autocompleteDropdown');
+    let activeSuggestElement = null;
+
+    function showSuggest(event, category) {
+      const target = event.target;
+      activeSuggestElement = target;
+      const text = target.innerText.trim().toLowerCase();
+
+      if (!text || text.length < 1) {
+        drop.classList.add('hidden');
+        return;
+      }
+
+      let matches = [];
+      if (category === 'medicine_brand') {
+        matches = appData.medicines.filter(m => m.brand.toLowerCase().includes(text));
+      } else if (appData[category]) {
+        matches = appData[category].filter(item => item.toLowerCase().includes(text));
+      }
+
+      if (matches.length === 0) {
+        drop.classList.add('hidden');
+        return;
+      }
+
+      drop.innerHTML = '';
+      const rect = target.getBoundingClientRect();
+      drop.style.top = (window.scrollY + rect.bottom + 2) + 'px';
+      drop.style.left = (window.scrollX + rect.left) + 'px';
+      drop.style.minWidth = '220px';
+
+      matches.slice(0, 7).forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'autocomplete-item';
+        if (category === 'medicine_brand') {
+          itemDiv.innerHTML = `<div><b>${item.brand}</b><div class="text-[10px] text-slate-500">${item.generic}</div></div> <small class="text-sky-700 font-mono">${item.duration}</small>`;
+          itemDiv.onclick = () => selectMedicineSuggest(item);
+        } else {
+          itemDiv.innerText = item;
+          itemDiv.onclick = () => selectTextSuggest(item);
+        }
+        drop.appendChild(itemDiv);
+      });
+
+      drop.classList.remove('hidden');
+    }
+
+    function selectMedicineSuggest(med) {
+      if (!activeSuggestElement) return;
+      recordState();
+      const medRow = activeSuggestElement.closest('.med-row');
+      if (medRow) {
+        medRow.querySelector('.suggest-target').innerText = med.brand;
+        const allEditables = medRow.querySelectorAll('[contenteditable="true"]');
+        if (allEditables[1]) allEditables[1].innerText = med.generic;
+        if (allEditables[2]) allEditables[2].innerText = med.dose;
+        if (allEditables[3]) allEditables[3].innerText = med.duration;
+      }
+      drop.classList.add('hidden');
+      triggerAutoSave();
+    }
+
+    function selectTextSuggest(val) {
+      if (!activeSuggestElement) return;
+      recordState();
+      activeSuggestElement.innerText = val;
+      drop.classList.add('hidden');
+      triggerAutoSave();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!drop.contains(e.target) && e.target !== activeSuggestElement) {
+        drop.classList.add('hidden');
+      }
+    });
+
+    // --- LOGO & SIGNATURE UPLOADS ---
+    function triggerLogoUpload() { document.getElementById('logoInput').click(); }
+    function handleLogoChange(e) {
+      const file = e.target.files[0];
+      if (file) {
+        recordState();
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          document.getElementById('logoContainer').innerHTML = `<img src="${evt.target.result}" class="w-full h-full object-cover">`;
+          triggerAutoSave();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    function removeLogo() {
+      recordState();
+      document.getElementById('logoContainer').innerHTML = `<i class="fa-solid fa-plus text-2xl"></i>`;
+      triggerAutoSave();
+    }
+
+    function triggerSigUpload() { document.getElementById('sigInput').click(); }
+    function handleSigChange(e) {
+      const file = e.target.files[0];
+      if (file) {
+        recordState();
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          document.getElementById('sigContainer').innerHTML = `<img src="${evt.target.result}" class="h-7 max-w-full object-contain">`;
+          triggerAutoSave();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // --- BILINGUAL (BANGLA / ENGLISH) TOGGLE ---
+    let isBangla = true;
+    // --- BOTTOM NAVIGATION LOGIC (Like Mobile App Tabs) ---
+    function switchBottomNav(tabKey) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+      document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+        btn.classList.remove('text-sky-700', 'active');
+        btn.classList.add('text-slate-500');
+      });
+
+      if (tabKey === 'tabPreview') {
+        document.getElementById('tabPreviewView').classList.remove('hidden');
+        document.getElementById('navBtnPreview').classList.add('text-sky-700', 'active');
+      } else if (tabKey === 'tabGuidelines') {
+        document.getElementById('tabGuidelinesView').classList.remove('hidden');
+        document.getElementById('navBtnGuidelines').classList.add('text-sky-700', 'active');
+      } else if (tabKey === 'tabStorage') {
+        document.getElementById('tabStorageView').classList.remove('hidden');
+        document.getElementById('navBtnStorage').classList.add('text-sky-700', 'active');
+        renderStorageTable();
+      } else if (tabKey === 'tabAnalytics') {
+        document.getElementById('tabAnalyticsView').classList.remove('hidden');
+        document.getElementById('navBtnAnalytics').classList.add('text-sky-700', 'active');
+        refreshAnalytics();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- STORAGE & ARCHIVE LOGIC ---
+    function renderStorageTable() {
+      const tbody = document.getElementById('savedPrescriptionTableBody');
+      const records = appData.savedRecords || [];
+      if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">কোনো সংরক্ষিত প্রেসক্রিপশন পাওয়া যায়নি।</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = records.map((r, i) => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2.5 font-bold text-slate-800">${r.patientName}</td>
+          <td class="p-2.5 font-mono text-slate-600">${r.id}</td>
+          <td class="p-2.5 text-slate-500">${r.date}</td>
+          <td class="p-2.5 text-rose-800 font-semibold">${r.diagnosis}</td>
+          <td class="p-2.5 text-right space-x-1.5">
+            <button onclick="restoreArchiveRecord(${i})" class="text-sky-700 hover:text-sky-900 font-bold text-xs" title="প্রেসক্রিপশনে লোড করুন"><i class="fa-solid fa-arrow-up-right-from-square"></i> লোড</button>
+            <button onclick="deleteArchiveRecord(${i})" class="text-rose-500 hover:text-rose-700 text-xs ml-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function saveCurrentPatientRecord() {
+      const pName = document.getElementById('patientName').innerText.trim() || "Unknown";
+      const pId = document.getElementById('patientId').innerText.trim() || Date.now().toString().slice(-6);
+      const date = document.getElementById('rxDate').innerText.trim();
+      const diag = Array.from(document.querySelectorAll('#diagnosisList .suggest-target')).map(e => e.innerText.trim()).join(', ') || "N/A";
+      const count = document.querySelectorAll('.med-row').length;
+      const sex = document.getElementById('patientSex').innerText.trim() || "M";
+
+      appData.savedRecords.unshift({
+        patientName: pName,
+        id: pId,
+        date: date,
+        diagnosis: diag,
+        medsCount: count,
+        gender: sex
+      });
+      saveAppData();
+      renderStorageTable();
+      showToast("আর্কাইভ সংরক্ষিত", `রোগী "${pName}" সফলভাবে স্টোরেজে জমা হয়েছে।`);
+    }
+
+    function deleteArchiveRecord(idx) {
+      appData.savedRecords.splice(idx, 1);
+      saveAppData();
+      renderStorageTable();
+    }
+
+    function restoreArchiveRecord(idx) {
+      const r = appData.savedRecords[idx];
+      if (!r) return;
+      document.getElementById('patientName').innerText = r.patientName;
+      document.getElementById('patientId').innerText = r.id;
+      document.getElementById('patientSex').innerText = r.gender;
+      switchBottomNav('tabPreview');
+      showToast("রেকর্ড লোড হয়েছে", `রোগী ${r.patientName}-এর তথ্য স্ক্রিনে যুক্ত হয়েছে।`);
+    }
+
+    function exportDatabaseJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Rx_Prescriptions_Backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importDatabaseJSON(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed.medicines && parsed.templates) {
+            appData = parsed;
+            saveAppData();
+            renderMedicines(appData.medicines);
+            populateTemplateDropdown();
+            renderStorageTable();
+            showToast("ডাটাবেজ পুনরুদ্ধার সম্পন্ন", "আপনার সকল তথ্য সফলভাবে ইমপোর্ট হয়েছে।");
+          } else {
+            showToast("ত্রুটি", "সঠিক ব্যাকআপ ফাইল নয়।");
+          }
+        } catch(err) {
+          showToast("ত্রুটি", "ফাইলটি পড়া সম্ভব হয়নি।");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- ANALYTICS ENGINE ---
+    function refreshAnalytics() {
+      const records = appData.savedRecords || [];
+      const total = records.length;
+      document.getElementById('statTotalPatients').innerText = total;
+
+      const males = records.filter(r => r.gender.toUpperCase().includes('M')).length;
+      const females = total - males;
+      document.getElementById('statGenderRatio').innerText = total > 0 ? `${males}:${females}` : "0:0";
+
+      // Top Medicines list
+      const topMedsList = document.getElementById('analyticsTopMedsList');
+      topMedsList.innerHTML = appData.medicines.slice(0, 5).map((m, idx) => `
+        <div class="flex items-center justify-between text-xs p-1.5 bg-white rounded border">
+          <span class="font-bold text-slate-800">${idx+1}. ${m.brand}</span>
+          <span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-mono text-[10px]">${94 - (idx * 14)}% ব্যবহার</span>
+        </div>
+      `).join('');
+
+      // Top Diagnosis list
+      const topDiagList = document.getElementById('analyticsTopDiagnosisList');
+      topDiagList.innerHTML = appData.diagnosis.slice(0, 5).map((d, idx) => `
+        <div class="flex items-center justify-between text-xs p-1.5 bg-white rounded border">
+          <span class="font-bold text-rose-900">${idx+1}. ${d}</span>
+          <span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-mono text-[10px]">${45 - (idx * 6)} রোগী</span>
+        </div>
+      `).join('');
+    }
+
+    // --- TEMPLATES LOGIC ---
+    function populateTemplateDropdown() {
+      const sel = document.getElementById('templateSelector');
+      sel.innerHTML = '<option value="">টেমপ্লেট বাছুন...</option>';
+      appData.templates.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.className = 'text-slate-800';
+        opt.innerText = t.name;
+        sel.appendChild(opt);
+      });
+    }
+
+    function applySelectedTemplate(templateId) {
+      if (!templateId) return;
+      const t = appData.templates.find(item => item.id === templateId);
+      if (!t) return;
+      recordState();
+
+      // Diagnosis
+      const diagUl = document.getElementById('diagnosisList');
+      diagUl.innerHTML = '';
+      t.diagnosis.forEach(d => {
+        const li = document.createElement('li');
+        li.className = "group relative font-semibold text-rose-900";
+        li.innerHTML = `<span contenteditable="true" oninput="showSuggest(event, 'diagnosis'); triggerAutoSave();" class="suggest-target">${d}</span><button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>`;
+        diagUl.appendChild(li);
+      });
+
+      // Complaints
+      const compUl = document.getElementById('complaintsList');
+      compUl.innerHTML = '';
+      t.complaints.forEach(c => {
+        const li = document.createElement('li');
+        li.className = "group relative";
+        li.innerHTML = `<span contenteditable="true" oninput="showSuggest(event, 'complaints'); triggerAutoSave();" class="suggest-target">${c}</span><button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>`;
+        compUl.appendChild(li);
+      });
+
+      // History
+      const histUl = document.getElementById('historyList');
+      histUl.innerHTML = '';
+      t.history.forEach(h => {
+        const li = document.createElement('li');
+        li.className = "group relative";
+        li.innerHTML = `<span contenteditable="true" oninput="showSuggest(event, 'history'); triggerAutoSave();" class="suggest-target">${h}</span><button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>`;
+        histUl.appendChild(li);
+      });
+
+      // Investigations
+      const invUl = document.getElementById('investigationList');
+      invUl.innerHTML = '';
+      t.investigations.forEach(inv => {
+        const li = document.createElement('li');
+        li.className = "group relative";
+        li.innerHTML = `<span contenteditable="true" oninput="showSuggest(event, 'investigations'); triggerAutoSave();" class="suggest-target">${inv}</span><button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>`;
+        invUl.appendChild(li);
+      });
+
+      if (t.referred) document.getElementById('referredToField').innerText = t.referred;
+      if (t.notes) document.getElementById('specialNotesField').innerText = t.notes;
+
+      // Medicines
+      renderMedicines(t.medicines);
+
+      // Advice
+      if (t.advice) {
+        const advUl = document.getElementById('adviceList');
+        advUl.innerHTML = '';
+        t.advice.forEach(a => {
+          const li = document.createElement('li');
+          li.className = "group";
+          li.innerHTML = `<span contenteditable="true" onblur="triggerAutoSave()">${a}</span><button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>`;
+          advUl.appendChild(li);
+        });
+      }
+      triggerAutoSave();
+    }
+
+    function saveCurrentAsTemplate() {
+      const name = prompt(isBangla ? "টেমপ্লেটের নাম দিন (যেমন: ডায়াবেটিস ফলোআপ):" : "Enter template name:");
+      if (!name) return;
+
+      const newTmpl = {
+        id: 'tmpl_' + Date.now(),
+        name: name,
+        diagnosis: Array.from(document.querySelectorAll('#diagnosisList .suggest-target')).map(e => e.innerText.trim()),
+        complaints: Array.from(document.querySelectorAll('#complaintsList .suggest-target')).map(e => e.innerText.trim()),
+        history: Array.from(document.querySelectorAll('#historyList .suggest-target')).map(e => e.innerText.trim()),
+        investigations: Array.from(document.querySelectorAll('#investigationList .suggest-target')).map(e => e.innerText.trim()),
+        referred: document.getElementById('referredToField').innerText.trim(),
+        notes: document.getElementById('specialNotesField').innerText.trim(),
+        medicines: getDOMMedicines(),
+        advice: Array.from(document.querySelectorAll('#adviceList span[contenteditable="true"]')).map(e => e.innerText.trim())
+      };
+
+      appData.templates.push(newTmpl);
+      saveAppData();
+      populateTemplateDropdown();
+      showToast("টেমপ্লেট সংরক্ষিত", `"${name}" সফলভাবে যুক্ত হয়েছে।`);
+    }
+
+    // --- PDF / PRINT SYNC ---
+    function syncPdfFilename() {
+      const pName = document.getElementById('patientName').innerText.trim() || "Patient";
+      const pId = document.getElementById('patientId').innerText.trim() || "";
+      const date = document.getElementById('rxDate').innerText.trim().replace(/\//g, '-');
+      document.title = `Prescription - ${pName} [ID-${pId}] ${date}`;
+    }
+
+    function printPrescription() {
+      // Force switch to preview tab before printing
+      switchBottomNav('tabPreview');
+      syncPdfFilename();
+      checkAutoZoomFit();
+      setTimeout(() => {
+        window.print();
+      }, 150);
+    }
+
+    // --- TOAST ALERTS ---
+    function showToast(title, msg) {
+      const toast = document.getElementById('toastAlert');
+      document.getElementById('toastTitle').innerText = title;
+      document.getElementById('toastMessage').innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 5000);
+    }
+    function dismissToast() {
+      document.getElementById('toastAlert').classList.add('hidden');
+    }
+
+    // --- SETTINGS MODAL ---
+    function openSettingsModal() {
+      renderLibraryUI();
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+      populateTemplateDropdown();
+    }
+    function switchSettingsTab(tabId) {
+      document.querySelectorAll('.set-tab-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('border-sky-600', 'text-sky-700');
+        b.classList.add('border-transparent', 'text-slate-600');
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('setTabBtn' + tabId.replace('settings', ''));
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-slate-600');
+        activeBtn.classList.add('border-sky-600', 'text-sky-700');
+      }
+    }
+
+    function renderLibraryUI() {
+      const medList = document.getElementById('libMedicineList');
+      medList.innerHTML = appData.medicines.map((m, idx) => `
+        <div class="p-2 flex justify-between items-center hover:bg-slate-50">
+          <div>
+            <strong class="text-slate-900">${m.brand}</strong> <span class="text-slate-500">${m.generic}</span>
+            <div class="text-[11px] text-sky-800">${m.dose} • ${m.duration}</div>
+          </div>
+          <button onclick="deleteLibItem('medicines', ${idx})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `).join('');
+
+      renderSimpleList('complaints', 'libComplaintList');
+      renderSimpleList('diagnosis', 'libDiagList');
+      renderSimpleList('investigations', 'libInvList');
+      renderSimpleList('referred', 'libRefList');
+    }
+
+    function renderSimpleList(key, containerId) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = (appData[key] || []).map((item, idx) => `
+        <div class="p-2 flex justify-between items-center hover:bg-slate-50">
+          <span class="text-slate-800">${item}</span>
+          <button onclick="deleteLibItem('${key}', ${idx})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `).join('');
+    }
+
+    function addLibraryItem(key, inputId) {
+      const val = document.getElementById(inputId).value.trim();
+      if (!val) return;
+      if (key === 'medicines') {
+        const parts = val.split('|');
+        appData.medicines.unshift({
+          brand: parts[0] ? parts[0].trim() : val,
+          generic: parts[1] ? parts[1].trim() : "",
+          dose: parts[2] ? parts[2].trim() : "১+০+১",
+          duration: parts[3] ? parts[3].trim() : "৭ দিন"
+        });
+      } else {
+        if (!appData[key]) appData[key] = [];
+        appData[key].unshift(val);
+      }
+      document.getElementById(inputId).value = '';
+      saveAppData();
+      renderLibraryUI();
+    }
+
+    function deleteLibItem(key, idx) {
+      appData[key].splice(idx, 1);
+      saveAppData();
+      renderLibraryUI();
+    }
+
+    function resetDefaultLibraries() {
+      if (confirm("সকল কাস্টম ডাটা মুছে ডিফল্ট সেটিংসে ফিরবেন?")) {
+        appData = JSON.parse(JSON.stringify(DEFAULT_STORAGE));
+        saveAppData();
+        renderLibraryUI();
+        showToast("রিসেট সম্পন্ন", "ডিফল্ট ডাটাবেজ পুনঃস্থাপিত হয়েছে!");
+      }
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undoAction();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redoAction();
+      }
+    });
+
+    // PWA Offline Service Worker (real sw.js file; works when served over https/localhost)
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+    }
+
+    // --- INITIALIZE (see fix layer: initApp) ---
+    window.addEventListener('DOMContentLoaded', () => { initApp(); });
+
+    // Listen to resize and orientation change to verify auto-zoom without losing data
+    window.addEventListener('resize', () => {
+      checkAutoZoomFit();
+    });
+  </script>
+<script>
+/* ===== FIX LAYER v2 — original UI/mobile layout untouched; only logic fixes & additions ===== */
+(function(){
+'use strict';
+const $=id=>document.getElementById(id), qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const CANVAS=()=>$('prescriptionCanvas');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const strip=s=>String(s==null?'':s).replace(/[<>]/g,'');
+const txt=id=>{const e=$(id);return e?e.innerText.trim():''};
+const put=(id,v)=>{const e=$(id);if(e)e.innerText=v==null?'':v;};
+const pad=n=>String(n).padStart(2,'0');
+const todayStr=()=>{const d=new Date();return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();};
+const DB_KEY='rx_app_database',ST_KEY='rx_working_state',AS_KEY='rx_assets_v2';
+const BASE_LISTS=['medicines','complaints','history','diagnosis','investigations','referred'];
+
+function safeSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){showToast('সংরক্ষণ ব্যর্থ','স্টোরেজ ভরে গেছে — এখনই ব্যাকআপ (JSON) ডাউনলোড করুন।');return false;}}
+window.saveAppData=function(){safeSet(DB_KEY,JSON.stringify(appData));};
+let tt;window.showToast=function(title,msg){const t=$('toastAlert');$('toastTitle').innerText=title;$('toastMessage').innerText=msg;t.classList.remove('hidden');clearTimeout(tt);tt=setTimeout(()=>t.classList.add('hidden'),5000);};
+
+/* ---------- data integrity ---------- */
+const DEMO=['308124|মোহাম্মদ রহিম','308125|সুলতানা খাতুন','308126|আব্দুল করিম'];
+function ensureData(){
+  const base=DEFAULT_STORAGE;
+  ['medicines','complaints','history','diagnosis','investigations','referred','savedRecords','templates'].forEach(k=>{if(!Array.isArray(appData[k]))appData[k]=JSON.parse(JSON.stringify(base[k]||[]));});
+  appData.savedRecords=appData.savedRecords.filter(r=>r&&!(DEMO.includes(r.id+'|'+r.patientName)&&!r.state));
+  const ids=base.templates.map(t=>t.id);
+  appData.templates=base.templates.map(t=>JSON.parse(JSON.stringify(t))).concat(appData.templates.filter(t=>t&&!ids.includes(t.id)));
+  ['complaints','history','diagnosis','investigations','referred'].forEach(k=>{appData[k]=appData[k].map(strip);});
+  appData.medicines=appData.medicines.map(m=>({brand:strip(m.brand),generic:strip(m.generic),dose:strip(m.dose),duration:strip(m.duration)}));
+  window.saveAppData();}
+
+/* ---------- list / state helpers ---------- */
+const LI={complaintsList:['complaints','group relative'],historyList:['history','group relative'],diagnosisList:['diagnosis','group relative font-semibold text-rose-900'],investigationList:['investigations','group relative']};
+const XBTN='<button onclick="removeListItem(this)" class="no-print ml-1 text-rose-500 opacity-0 group-hover:opacity-100 text-[9px]"><i class="fa-solid fa-xmark"></i></button>';
+function mkLi(listId,text){const li=document.createElement('li'),c=LI[listId];
+  if(c){li.className=c[1];li.innerHTML=`<span contenteditable="true" oninput="showSuggest(event, '${c[0]}'); triggerAutoSave();" class="suggest-target"></span>`+XBTN;}
+  else{li.className='group';li.innerHTML='<span contenteditable="true" onblur="triggerAutoSave()"></span>'+XBTN;}
+  li.querySelector('span').textContent=text;return li;}
+function fillList(id,arr){const ul=$(id);ul.innerHTML='';(arr||[]).forEach(t=>ul.appendChild(mkLi(id,t)));}
+const HDR_IDS=['hdrSpecialistBn','docNameBn','hdrDegreeBn','hdrDesignationBn','hdrHospitalBn','hdrTrainingBn','hdrBmdcBn','hdrSpecialistEn','docNameEn','hdrDegreeEn','hdrDesignationEn','hdrHospitalEn','hdrTrainingEn','hdrBmdcEn','hdrExtraBn','hdrExtraEn'];
+const vit=()=>qsa('.prescription-body .grid.grid-cols-2 [contenteditable="true"]',CANVAS());
+const foot=()=>qsa('.footer-section .bg-slate-50 [contenteditable="true"]',CANVAS());
+const spans=sel=>qsa(sel+' span[contenteditable="true"]',CANVAS()).map(e=>e.innerText.trim());
+function captureState(){return{patientName:txt('patientName'),patientAge:txt('patientAge'),patientPhone:txt('patientPhone'),patientSex:txt('patientSex'),patientId:txt('patientId'),rxDate:txt('rxDate'),patientAddress:txt('patientAddress'),
+  referredTo:txt('referredToField'),specialNotes:txt('specialNotesField'),vitals:vit().map(e=>e.innerText.trim()),medicines:getDOMMedicines(),
+  complaints:spans('#complaintsList'),history:spans('#historyList'),diagnosis:spans('#diagnosisList'),investigations:spans('#investigationList'),advice:spans('#adviceList'),
+  blank:{on:!!blankOn,title:txt('blankTitle'),text:txt('blankText')}};}
+const PH={patientPhone:'01XXXXXXXXX',patientName:'রোগীর নাম',patientAge:'বয়স',patientSex:'M/F',patientId:'ID',rxDate:'dd/mm/yyyy',patientAddress:'ঠিকানা',referredToField:'লিখুন…',specialNotesField:'লিখুন…'};
+function markPh(){for(const k in PH){const e=$(k);if(e)e.dataset.ph=PH[k];}vit().forEach(e=>e.dataset.ph='—');}
+function restoreState(s){['patientName','patientAge','patientPhone','patientSex','patientId','rxDate','patientAddress'].forEach(k=>put(k,s[k]));
+  put('referredToField',s.referredTo);put('specialNotesField',s.specialNotes);
+  vit().forEach((e,i)=>{e.innerText=(s.vitals&&s.vitals[i])||'';});
+  fillList('complaintsList',s.complaints);fillList('historyList',s.history);fillList('diagnosisList',s.diagnosis);fillList('investigationList',s.investigations);fillList('adviceList',s.advice);
+  renderMedicines(s.medicines||[]);
+  if(Array.isArray(s.header))HDR_IDS.forEach((id,i)=>{if(s.header[i]!=null)put(id,s.header[i]);});
+  if(Array.isArray(s.footer))foot().forEach((e,i)=>{if(s.footer[i]!=null)e.innerText=s.footer[i];});
+  if(s.blank){if(s.blank.title)put('blankTitle',s.blank.title);put('blankText',s.blank.text||'');setBlank(!!s.blank.on);}
+  markPh();}
+window.triggerAutoSave=function(){clearTimeout(window.__as);window.__as=setTimeout(()=>{safeSet(ST_KEY,JSON.stringify(captureState()));checkAutoZoomFit();},300);};
+
+/* ---------- logo / signature (resized, saved once) ---------- */
+function assets(){try{return JSON.parse(localStorage.getItem(AS_KEY)||'{}');}catch(e){return {};}}
+function applyAssets(){const a=assets();
+  $('logoContainer').innerHTML=a.logo?`<img src="${a.logo}" class="w-full h-full object-cover">`:'<i class="fa-solid fa-plus text-2xl"></i>';
+  $('sigContainer').innerHTML=a.sig?`<img src="${a.sig}" class="h-7 max-w-full object-contain">`:'<span class="font-serif italic text-base font-bold text-sky-950">Dr. Basunia</span>';}
+function readImg(f,maxW,cb){const r=new FileReader();r.onload=e=>{const im=new Image();im.onload=()=>{const k=Math.min(1,maxW/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/png'));};im.src=e.target.result;};r.readAsDataURL(f);}
+function setAsset(key,val){const a=assets();if(val)a[key]=val;else delete a[key];if(safeSet(AS_KEY,JSON.stringify(a))){if(key==='logo'&&P){A().logo=val||'';saveP();}recordState();applyAssets();triggerAutoSave();if(P&&$('chamberModal')&&!$('chamberModal').classList.contains('hidden'))renderModal();renderHub();}}
+window.handleLogoChange=function(e){const f=e.target.files[0];e.target.value='';if(f)readImg(f,240,u=>setAsset('logo',u));};
+window.handleSigChange=function(e){const f=e.target.files[0];e.target.value='';if(f)readImg(f,420,u=>setAsset('sig',u));};
+window.removeLogo=function(){setAsset('logo',null);};
+
+/* ---------- undo / redo (fixed) ---------- */
+window.recordState=function(){const c=CANVAS();if(!c)return;const h=c.innerHTML;if(undoStack[undoStack.length-1]===h)return;undoStack.push(h);if(undoStack.length>25)undoStack.shift();redoStack=[];};
+function applyHtml(h){CANVAS().innerHTML=h;applyAssets();if(P)applyChamberTexts();syncBinds();updateMedicineGridAndCapacity();triggerAutoSave();}
+window.undoAction=function(){const cur=CANVAS().innerHTML;while(undoStack.length&&undoStack[undoStack.length-1]===cur)undoStack.pop();
+  if(!undoStack.length)return;redoStack.push(cur);applyHtml(undoStack.pop());};
+window.redoAction=function(){if(!redoStack.length)return;undoStack.push(CANVAS().innerHTML);applyHtml(redoStack.pop());};
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.isContentEditable&&CANVAS()&&CANVAS().contains(t))recordState();});
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.isContentEditable&&CANVAS()&&CANVAS().contains(t))triggerAutoSave();});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.tagName==='SPAN'&&e.target.isContentEditable)e.preventDefault();});
+document.addEventListener('paste',e=>{const t=e.target;if(t&&t.isContentEditable){e.preventDefault();const s=(e.clipboardData||window.clipboardData).getData('text/plain').replace(/\s+/g,' ');document.execCommand('insertText',false,s);}});
+
+/* ---------- guaranteed single page (measured in real print geometry) ---------- */
+const TARGET_PX=296.5*96/25.4;
+function needHeight(padM){const c=CANVAS().cloneNode(true);c.removeAttribute('id');c.classList.add('print-sim');c.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';
+  [['width','210mm'],['height','auto'],['max-height','none'],['min-height','0'],['zoom','1'],['padding',padM?'0 10mm':'7mm 10mm 4mm 10mm'],['transform','none'],['overflow','visible'],['display','flex'],['flex-direction','column'],['border-radius','0'],['box-shadow','none']].forEach(([k,v])=>c.style.setProperty(k,v,'important'));
+  qsa(padM?'.no-print,.header-section,.footer-section':'.no-print',c).forEach(e=>e.remove());document.body.appendChild(c);const h=c.getBoundingClientRect().height;c.remove();return h;}
+let zState='ok';
+window.checkAutoZoomFit=function(){if(!CANVAS())return;const skip=thermalOn||body.classList.contains('lab-slip-mode'),padM=!!(P&&A().pad)&&!skip,avail=padM?TARGET_PX-((+A().padTop||0)+(+A().padBot||0))*96/25.4:TARGET_PX;
+  const h=skip?0:needHeight(padM);let z=1;CANVAS().classList.toggle('over-page',!skip&&h>avail);renderMedWarn();
+  if(h>avail)z=Math.max(0.62,Math.floor(avail/h*0.99*100)/100);
+  document.documentElement.style.setProperty('--print-auto-zoom',z.toFixed(3));
+  const zt=$('zoomValueText');if(zt)zt.innerText=Math.round(z*100)+'%';
+  const b=$('zoomIndicatorBadge');if(b){b.classList.toggle('bg-amber-900',z<1);b.classList.toggle('text-amber-200',z<1);}
+  const st=z>=1?'ok':(h*z>avail*1.005?'over':'fit');
+  if(st!==zState){zState=st;
+    if(st==='fit')showToast('স্মার্ট অটো-ফিট কার্যকর','লেখা বেশি হওয়ায় প্রিন্টে '+Math.round(z*100)+'% স্কেল হবে — তবু এক পাতাতেই থাকবে।');
+    else if(st==='over')showToast('সতর্কতা: লেখা অনেক বেশি','সর্বনিম্ন স্কেলেও এক পাতায় ধরছে না। কিছু ঔষধ/লেখা কমান, নইলে নিচের অংশ প্রিন্টে কাটা পড়বে।');}};
+window.addEventListener('beforeprint',()=>checkAutoZoomFit());
+
+/* ---------- new patient / safe adders ---------- */
+function nextId(){const ch=P&&A();
+  if(ch&&ch.prefix){let n=0;appData.savedRecords.forEach(r=>{const m=String(r.id||'').match(/^([A-Z0-9]+)-(\d+)$/);if(m&&m[1]===ch.prefix)n=Math.max(n,+m[2]);});return ch.prefix+'-'+String(n+1).padStart(4,'0');}
+  const n=appData.savedRecords.map(r=>/^\d+$/.test(String(r.id))?parseInt(r.id,10):NaN).filter(x=>!isNaN(x));return String(Math.max(1000,...n)+1);}
+window.newPatient=function(skip){
+  if(skip!==true&&!confirm('নতুন রোগীর জন্য ফর্ম ফাঁকা করবেন? (আগের লেখা আনডু দিয়ে ফেরানো যাবে; প্রিন্ট করলে রেকর্ড আর্কাইভে সেভ হয়ে থাকে)'))return;
+  recordState();['patientName','patientAge','patientPhone','patientSex','patientAddress'].forEach(k=>put(k,''));put('patientId',nextId());put('rxDate',todayStr());
+  vit().forEach(e=>{e.innerText='';});['complaintsList','historyList','diagnosisList','investigationList','adviceList'].forEach(id=>fillList(id,[]));
+  put('referredToField','');put('specialNotesField','');put('blankText','');setBlank(false);renderMedicines([]);markPh();syncBinds();triggerAutoSave();};
+const focusSel=el=>{if(!el)return;el.focus();const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);};
+const _cmn=window.createMedicineNode;window.createMedicineNode=(b,g,d,u)=>_cmn(esc(b),esc(g),esc(d),esc(u));
+const _ali=window.addListItem;window.addListItem=function(id,t){_ali(id,esc(t));const ul=$(id);focusSel(ul.lastElementChild&&ul.lastElementChild.querySelector('span'));};
+const _aai=window.addAdviceItem;window.addAdviceItem=function(){_aai();const ul=$('adviceList');focusSel(ul.lastElementChild&&ul.lastElementChild.querySelector('span'));};
+const _amr=window.addMedicineRow;window.addMedicineRow=function(){_amr();const rows=qsa('.med-row');focusSel(rows.length&&rows[rows.length-1].querySelector('.suggest-target'));};
+
+/* ---------- templates ---------- */
+window.applySelectedTemplate=function(id){const sel=$('templateSelector');if(!id)return;const t=appData.templates.find(x=>x.id===id);if(!t){sel.value='';return;}
+  if(document.querySelectorAll('.med-row').length&&!confirm('বর্তমান ঔষধ ও তালিকা এই টেমপ্লেট দিয়ে বদলে যাবে। চালিয়ে যাবেন?')){sel.value='';return;}
+  recordState();fillList('diagnosisList',t.diagnosis);fillList('complaintsList',t.complaints);fillList('historyList',t.history);fillList('investigationList',t.investigations);
+  put('referredToField',t.referred||'');put('specialNotesField',t.notes||'');renderMedicines(t.medicines||[]);if(t.advice)fillList('adviceList',t.advice);
+  sel.value='';markPh();triggerAutoSave();};
+
+/* ---------- archive (full prescription saved) ---------- */
+window.renderStorageTable=function(){const tb=$('savedPrescriptionTableBody'),rs=appData.savedRecords||[];
+  if(!rs.length){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-400">কোনো সংরক্ষিত প্রেসক্রিপশন পাওয়া যায়নি।</td></tr>';return;}
+  tb.innerHTML=rs.map((r,i)=>`<tr class="hover:bg-slate-50"><td class="p-2.5 font-bold text-slate-800">${esc(r.patientName)}</td><td class="p-2.5 font-mono text-slate-600">${esc(r.id)}</td><td class="p-2.5 text-slate-500">${esc(r.date)}</td><td class="p-2.5 text-rose-800 font-semibold">${esc(r.diagnosis)}</td><td class="p-2.5 text-right space-x-1.5"><button onclick="restoreArchiveRecord(${i})" class="text-sky-700 hover:text-sky-900 font-bold text-xs" title="প্রেসক্রিপশনে লোড করুন"><i class="fa-solid fa-arrow-up-right-from-square"></i> লোড</button><button onclick="deleteArchiveRecord(${i})" class="text-rose-500 hover:text-rose-700 text-xs ml-1"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');};
+window.saveCurrentPatientRecord=function(silent){const name=txt('patientName');
+  if(!name){if(silent!==true)showToast('নাম লিখুন','আর্কাইভ করার আগে রোগীর নাম লিখুন।');return;}
+  const st=captureState(),id=txt('patientId')||String(Date.now()).slice(-6),date=txt('rxDate');
+  const rec={patientName:name,id,date,diagnosis:st.diagnosis.filter(Boolean).join(', ')||'N/A',medsCount:st.medicines.length,gender:txt('patientSex')||'M',state:st};
+  const i=appData.savedRecords.findIndex(r=>r.id===id&&r.date===date&&r.patientName===name);
+  if(i>=0)appData.savedRecords[i]=rec;else appData.savedRecords.unshift(rec);
+  appData.savedRecords.forEach((r,k)=>{if(k>=60)delete r.state;});window.saveAppData();renderStorageTable();
+  if(silent!==true)showToast('আর্কাইভ সংরক্ষিত','রোগী "'+name+'" সফলভাবে স্টোরেজে জমা হয়েছে।');};
+window.restoreArchiveRecord=function(idx){const r=appData.savedRecords[idx];if(!r)return;recordState();
+  if(r.state){const s=Object.assign({},r.state);delete s.header;delete s.footer;restoreState(s);put('rxDate',todayStr());}
+  else{put('patientName',r.patientName);put('patientId',r.id);put('patientSex',r.gender);}
+  switchBottomNav('tabPreview');triggerAutoSave();showToast('রেকর্ড লোড হয়েছে',r.state?'রোগী '+r.patientName+'-এর পুরো প্রেসক্রিপশন লোড হয়েছে (তারিখ আজকের)।':'শুধু নাম/আইডি পাওয়া গেছে (পুরনো রেকর্ড)।');};
+window.deleteArchiveRecord=function(idx){if(!confirm('এই রেকর্ডটি মুছে ফেলবেন?'))return;appData.savedRecords.splice(idx,1);window.saveAppData();renderStorageTable();};
+const _pp=window.printPrescription;window.printPrescription=function(){window.saveCurrentPatientRecord(true);_pp();};
+window.importDatabaseJSON=function(evt){const f=evt.target.files[0];evt.target.value='';if(!f)return;const r=new FileReader();
+  r.onload=e=>{try{const p=JSON.parse(e.target.result);if(!p||!Array.isArray(p.medicines)||!Array.isArray(p.templates))throw 0;
+    if(!confirm('বর্তমান ডাটাবেজ বদলে ব্যাকআপ ফাইলের ডাটা বসবে। চালিয়ে যাবেন?'))return;
+    appData=Object.assign(JSON.parse(JSON.stringify(DEFAULT_STORAGE)),p);ensureData();populateTemplateDropdown();renderStorageTable();
+    showToast('ডাটাবেজ পুনরুদ্ধার সম্পন্ন','আপনার সকল তথ্য সফলভাবে ইমপোর্ট হয়েছে।');}catch(err){showToast('ত্রুটি','সঠিক ব্যাকআপ ফাইল নয়।');}};r.readAsText(f);};
+
+/* ---------- analytics from real records ---------- */
+const top=(arr,n)=>{const c={};arr.forEach(x=>{if(x)c[x]=(c[x]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n);};
+window.refreshAnalytics=function(){const rs=(appData.savedRecords||[]).filter(r=>r.kind!=='doc'),tot=rs.length;
+  $('statTotalPatients').innerText=tot;
+  const card=rs.filter(r=>/angina|hypertension|htn|heart|cardiac|ischemic|\bMI\b|arrhythm|failure|palpitation/i.test(r.diagnosis||'')).length;
+  $('statCardiacRatio').innerText=tot?Math.round(card/tot*100)+'%':'—';
+  $('statAvgMeds').innerText=tot?(rs.reduce((s,r)=>s+(+r.medsCount||0),0)/tot).toFixed(1):'—';
+  const fem=rs.filter(r=>/f|মহিলা|নারী|মেয়ে/i.test(r.gender||'')).length;$('statGenderRatio').innerText=tot?(tot-fem)+':'+fem:'0:0';
+  const meds=top([].concat(...rs.map(r=>((r.state&&r.state.medicines)||[]).map(m=>(m.brand||'').trim()))),5);
+  $('analyticsTopMedsList').innerHTML=meds.length?meds.map(([n,c],i)=>`<div class="flex items-center justify-between text-xs p-1.5 bg-white rounded border"><span class="font-bold text-slate-800">${i+1}. ${esc(n)}</span><span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-mono text-[10px]">${c} বার</span></div>`).join(''):'<p class="text-xs text-slate-400">এখনো কোনো প্রেসক্রিপশন আর্কাইভে নেই — প্রিন্ট করলেই জমা হবে।</p>';
+  const dg=top([].concat(...rs.map(r=>String(r.diagnosis||'').split(/[,;]/).map(s=>s.trim()).filter(s=>s&&s!=='N/A'))),5);
+  $('analyticsTopDiagnosisList').innerHTML=dg.length?dg.map(([n,c],i)=>`<div class="flex items-center justify-between text-xs p-1.5 bg-white rounded border"><span class="font-bold text-rose-900">${i+1}. ${esc(n)}</span><span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-mono text-[10px]">${c} রোগী</span></div>`).join(''):'<p class="text-xs text-slate-400">এখনো কোনো রোগ-নির্ণয়ের রেকর্ড নেই।</p>';};
+
+/* ---------- settings library ---------- */
+window.renderLibraryUI=function(){
+  $('libMedicineList').innerHTML=appData.medicines.map((m,i)=>`<div class="p-2 flex justify-between items-center hover:bg-slate-50"><div><strong class="text-slate-900">${esc(m.brand)}</strong> <span class="text-slate-500">${esc(m.generic)}</span><div class="text-[11px] text-sky-800">${esc(m.dose)} • ${esc(m.duration)}</div></div><button onclick="deleteLibItem('medicines', ${i})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button></div>`).join('');
+  renderSimpleList('complaints','libComplaintList');renderSimpleList('diagnosis','libDiagList');renderSimpleList('investigations','libInvList');renderSimpleList('referred','libRefList');};
+window.renderSimpleList=function(key,cid){$(cid).innerHTML=(appData[key]||[]).map((it,i)=>`<div class="p-2 flex justify-between items-center hover:bg-slate-50"><span class="text-slate-800">${esc(it)}</span><button onclick="deleteLibItem('${key}', ${i})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button></div>`).join('');};
+const _ali2=window.addLibraryItem;window.addLibraryItem=function(k,id){const e=$(id);if(e)e.value=strip(e.value);_ali2(k,id);};
+window.resetDefaultLibraries=function(){if(!confirm('শুধু ঔষধ/লক্ষণ/রোগ/টেস্টের লাইব্রেরি ডিফল্টে ফিরবে। রোগীর আর্কাইভ ও আপনার সেভ করা টেমপ্লেট অক্ষত থাকবে। চালিয়ে যাবেন?'))return;
+  const d=JSON.parse(JSON.stringify(DEFAULT_STORAGE));BASE_LISTS.forEach(k=>{appData[k]=d[k];});ensureData();renderLibraryUI();showToast('রিসেট সম্পন্ন','লাইব্রেরি ডিফল্টে ফিরেছে; আর্কাইভ ও টেমপ্লেট অপরিবর্তিত।');};
+
+/* ---------- modes: lab slip, blank pad, thermal ---------- */
+let blankOn=false,thermalOn=false,lastField=null;
+const body=document.body,root=document.documentElement;
+function syncBinds(){qsa('.bind-name').forEach(e=>{e.textContent=txt('patientName')||'..............';});qsa('.bind-age').forEach(e=>{e.textContent=txt('patientAge')||'....';});}
+function updateRxCode(){const id=txt('patientId');let h=0;const s=id+txt('rxDate')+getDOMMedicines().map(m=>m.brand+m.dose).join('|');
+  for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;const el=$('rxCode');if(el)el.textContent='RX-'+(id||'0')+'-'+h.toString(36).toUpperCase().slice(0,5);}
+function setBlank(on){blankOn=!!on;CANVAS().classList.toggle('blank-pad-active',blankOn);const b=$('btnBlank');if(b)b.classList.toggle('ring-2',blankOn);syncBinds();}
+window.toggleBlankPad=function(){recordState();setBlank(!blankOn);closeToolsDrawer();checkAutoZoomFit();triggerAutoSave();};
+window.toggleThermal=function(on){thermalOn=!!on;updateTag();savePrefs();const c=$('chkThermal');if(c)c.checked=thermalOn;root.classList.toggle('thermal-mode',thermalOn);body.classList.toggle('thermal-mode',thermalOn);
+  $('dynPage').textContent=thermalOn?'@page{size:80mm auto;margin:0}':'@page{size:A4 portrait;margin:0}';checkAutoZoomFit();};
+window.printLabSlip=function(){if(window.saveCurrentPatientRecord(true,'Pending Test')===false){showToast('নাম লিখুন','ল্যাব স্লিপের আগে রোগীর নাম লিখুন।');return;}
+  closeToolsDrawer();switchBottomNav('tabPreview');body.classList.add('lab-slip-mode');document.title='Lab-Slip - '+txt('patientName')+' [ID-'+txt('patientId')+']';
+  checkAutoZoomFit();setTimeout(()=>window.print(),150);setTimeout(()=>body.classList.remove('lab-slip-mode'),180000);};
+window.addEventListener('afterprint',()=>{body.classList.remove('lab-slip-mode');syncPdfFilename();checkAutoZoomFit();});
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.isContentEditable&&CANVAS()&&CANVAS().contains(t))lastField=t;});
+document.addEventListener('focusout',e=>{const t=e.target;if(t&&(t.id==='patientName'||t.id==='patientAge'))syncBinds();});
+
+/* ---------- tools drawer ---------- */
+const CHIPS=['১+০+১','১+১+১','১+০+০','০+১+০','০+০+১','খাবার আগে','খাবার পরে','রাতে শোবার পূর্বে','প্রয়োজনে (SOS)'];
+function isDose(el){const r=el&&el.closest&&el.closest('.med-row');return !!r&&qsa('[contenteditable="true"]',r).indexOf(el)===2;}
+window.insertDoseChip=function(c){const a=lastField;
+  if(a&&a.isConnected&&CANVAS().contains(a)&&isDose(a)){recordState();const parts=a.innerText.trim().split(' — '),pre=parts[0]||'',suf=parts.slice(1).join(' — ');
+    a.innerText=/\+/.test(c)?(suf?c+' — '+suf:c):((/^[০-৯]/.test(pre)?pre+' — ':'')+c);triggerAutoSave();closeToolsDrawer();showToast('ডোজ বসানো হয়েছে',a.innerText);}
+  else{closeToolsDrawer();showToast('আগে ডোজ-ঘরে ক্লিক করুন','যে ঔষধের ডোজ বদলাবেন তার ডোজ-ঘরে ক্লিক করে তারপর টুলস → চিপ চাপুন।');}};
+window.addFollowUpAdvice=function(days){recordState();const d=new Date(Date.now()+days*864e5),s=pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
+  qsa('#adviceList li[data-fu]').forEach(x=>x.remove());const li=mkLi('adviceList','পরবর্তী সাক্ষাৎ: '+s+' ('+(days===30?'১ মাস':days+' দিন')+' পর রিপোর্ট সহ আসবেন)।');li.dataset.fu='1';
+  $('adviceList').appendChild(li);triggerAutoSave();closeToolsDrawer();};
+window.sendWhatsApp=function(){let ph=txt('patientPhone').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g,'');
+  if(ph.startsWith('880')){}else if(ph.startsWith('0'))ph='88'+ph;else if(ph.length===10&&ph[0]==='1')ph='880'+ph;
+  if(ph.length<12){showToast('ফোন নম্বর দিন','রোগীর ফোন-ঘরে সঠিক নম্বর (01711XXXXXX) লিখুন।');return;}
+  const st=captureState(),meds=st.medicines.map((m,i)=>(i+1)+'. '+m.brand+' '+m.generic+'\n    '+m.dose+' • '+m.duration).join('\n'),adv=st.advice.filter(Boolean).map(a=>'• '+a).join('\n'),dx=st.diagnosis.filter(Boolean).join(', ');
+  const msg='*ডিজিটাল প্রেসক্রিপশন সামারি*\nরোগী: '+st.patientName+'\nতারিখ: '+st.rxDate+'\nচিকিৎসক: '+txt('docNameBn')+'\n'+(dx?'রোগ-নির্ণয়: '+dx+'\n':'')+'\n*ঔষধ:*\n'+(meds||'—')+'\n'+(adv?'\n*পরামর্শ:*\n'+adv+'\n':'')+'\nসুস্থ থাকুন।';
+  window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank');};
+let rec=null,recording=false;
+function voiceUi(){const b=$('btnVoice');if(b)b.innerHTML=recording?'<i class="fa-solid fa-stop"></i> থামান (রেকর্ডিং চলছে)':'<i class="fa-solid fa-microphone"></i> ভয়েস ডিক্টেশন';}
+window.toggleVoice=function(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showToast('সাপোর্ট নেই','এই ব্রাউজারে ভয়েস ডিক্টেশন নেই (Chrome ব্যবহার করুন)।');return;}
+  if(recording){rec.stop();return;}rec=new SR();rec.lang=isBangla?'bn-BD':'en-US';rec.continuous=true;rec.interimResults=false;
+  rec.onstart=()=>{recording=true;voiceUi();};rec.onend=()=>{recording=false;voiceUi();};rec.onerror=e=>showToast('ভয়েস ত্রুটি',String(e.error||''));
+  rec.onresult=ev=>{for(let i=ev.resultIndex;i<ev.results.length;i++){if(!ev.results[i].isFinal)continue;const t=ev.results[i][0].transcript.trim();if(!t)continue;const a=lastField;
+    if(a&&a.isConnected&&CANVAS().contains(a)){recordState();a.innerText=(a.innerText.trim()?a.innerText.trim()+' ':'')+t;triggerAutoSave();}else window.addListItem('complaintsList',t);}};
+  rec.start();closeToolsDrawer();};
+let deferred;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;});
+window.installPWA=function(){if(deferred){deferred.prompt();deferred=null;}else showToast('ইনস্টল','ব্রাউজার মেনু থেকে "Install app / Add to Home screen" বেছে নিন।');};
+function buildDrawer(){const d=document.createElement('div');d.id='toolsDrawer';d.className='no-print fixed inset-0 z-50 hidden';
+  d.innerHTML=`<div class="absolute inset-0 bg-slate-900/50" onclick="closeToolsDrawer()"></div>
+  <div class="absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl overflow-y-auto">
+   <div class="bg-sky-800 text-white px-4 py-2.5 flex justify-between items-center sticky top-0"><h3 class="font-bold text-sm"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> টুলস ও চিপস</h3><button onclick="closeToolsDrawer()" class="text-lg">✕</button></div>
+   <div class="p-3 space-y-3 text-xs">
+    <div><div class="font-bold text-slate-800 mb-1">ডোজ চিপস <span class="font-normal text-slate-500">(আগে ঔষধের ডোজ-ঘরে ক্লিক করুন)</span></div><div class="flex flex-wrap gap-1.5">${CHIPS.map(c=>`<button onclick="insertDoseChip(this.dataset.c)" data-c="${c}" class="bg-sky-100 hover:bg-sky-200 text-sky-900 font-semibold px-2 py-1 rounded">${c}</button>`).join('')}</div></div>
+    <div><div class="font-bold text-slate-800 mb-1">ফলো-আপ তারিখ</div><div class="flex gap-1.5">${[7,15,30].map(n=>`<button onclick="addFollowUpAdvice(${n})" class="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-semibold py-1.5 rounded">${n===30?'১ মাস':n+' দিন'}</button>`).join('')}</div></div>
+    <div class="grid grid-cols-2 gap-1.5">
+     <button onclick="printLabSlip()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded"><i class="fa-solid fa-microscope"></i> ল্যাব স্লিপ প্রিন্ট</button>
+     <button onclick="sendWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded"><i class="fa-brands fa-whatsapp"></i> WhatsApp সামারি</button>
+     <button id="btnVoice" onclick="toggleVoice()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded"><i class="fa-solid fa-microphone"></i> ভয়েস ডিক্টেশন</button>
+    </div>
+   </div></div>`;document.body.appendChild(d);}
+window.openToolsDrawer=function(){$('toolsDrawer').classList.remove('hidden');};
+window.closeToolsDrawer=function(){$('toolsDrawer').classList.add('hidden');};
+
+/* ---------- chamber profiles + printed-pad mode ---------- */
+const KEY='rx_profiles_v1',LOGO_OK=/^data:image\/[a-z+]+;base64,[A-Za-z0-9+\/=]+$/;
+const DAYS=[[6,'শনি'],[0,'রবি'],[1,'সোম'],[2,'মঙ্গল'],[3,'বুধ'],[4,'বৃহঃ'],[5,'শুক্র']];
+const FTR_DEF=['ক্লিনিক / চেম্বারের নাম','ঠিকানা','সিরিয়াল: ','অগ্রিম সিরিয়াল: ','সময়: ','হটলাইন: ','ইমেইল: ','ওয়েব: '];
+const HDR=()=>HDR_IDS.map(id=>$(id)).filter(Boolean);
+let P=null;const A=()=>P.chambers.find(c=>c.id===P.active)||P.chambers[0];
+function saveP(){safeSet(KEY,JSON.stringify(P));}
+function mk(label,hdr,ftr,logo){return{id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),label,hdr,ftr,logo:logo||'',prefix:'',pad:false,padTop:38,padBot:30,days:[]};}
+function capture(ch){ch.hdr=HDR().map(e=>e.innerText.trim());ch.ftr=foot().map(e=>e.innerText.trim());}
+function setTexts(list,arr){(arr||[]).forEach((t,i)=>{if(list[i]&&list[i].innerText.trim()!==t)list[i].innerText=t;});}
+function loadP(){try{P=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){P=null;}
+  if(!P||!Array.isArray(P.chambers)||!P.chambers.length){const c=mk('',[],[],assets().logo||'');capture(c);c.label=(c.ftr[0]||'প্রধান চেম্বার').slice(0,40);P={v:1,active:c.id,chambers:[c]};saveP();}}
+function applyChamberTexts(){if(!P)return;const ch=A();setTexts(HDR(),ch.hdr);setTexts(foot(),ch.ftr);
+  const a=assets();if(ch.logo)a.logo=ch.logo;else delete a.logo;safeSet(AS_KEY,JSON.stringify(a));applyAssets();
+  const r=root.style;r.setProperty('--padTop',(+ch.padTop||0)+'mm');r.setProperty('--padBot',(+ch.padBot||0)+'mm');body.classList.toggle('pad-mode',!!ch.pad);
+  updateTag();refreshFilter();renderHub();}
+function applyActive(){applyChamberTexts();checkAutoZoomFit();triggerAutoSave();}
+function switchTo(id){if(id===P.active)return;capture(A());P.active=id;saveP();applyActive();if(!txt('patientName'))put('patientId',nextId());renderModal();showToast('চেম্বার বদলেছে',A().label);}
+document.addEventListener('focusout',e=>{const t=e.target;if(!P||!t||!t.isContentEditable)return;if(t.closest('.header-section')||t.closest('.footer-section .bg-slate-50')){capture(A());saveP();}});
+function refreshFilter(){const s=$('chFilter');if(!s||!P)return;const v=s.value;s.innerHTML='<option value="">সব চেম্বার / প্রতিষ্ঠান</option>'+P.chambers.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('');s.value=P.chambers.some(c=>c.id===v)?v:'';}
+function renderModal(){const b=$('chBody');if(!b||!P)return;const ch=A();
+  b.innerHTML=`<div class="space-y-1.5">${P.chambers.map(c=>`<div data-a="switch" data-id="${c.id}" class="flex items-center justify-between gap-2 p-2 rounded-lg border cursor-pointer ${c.id===P.active?'border-sky-600 bg-sky-50':'border-slate-200 hover:bg-slate-50'}"><div class="min-w-0"><div class="font-bold text-slate-900 truncate">${c.id===P.active?'● ':''}${esc(c.label)}</div><div class="text-[10px] text-slate-500 truncate">${esc((c.ftr&&c.ftr[1])||'')}${c.prefix?' • ID: '+esc(c.prefix)+'-…':''}${c.pad?' • প্রিন্টেড প্যাড':''}</div></div><div class="flex gap-3 text-sm shrink-0"><button data-a="dup" data-id="${c.id}" title="কপি" class="text-sky-700"><i class="fa-regular fa-copy"></i></button><button data-a="del" data-id="${c.id}" title="মুছুন" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}</div>
+  <button data-a="new" class="w-full bg-sky-700 hover:bg-sky-800 text-white font-bold py-2 rounded-lg">+ নতুন চেম্বার / প্রতিষ্ঠান যোগ করুন</button>
+  <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2"><div class="font-bold text-slate-800">বর্তমান চেম্বারের সেটিংস</div>
+   <label class="block">তালিকায় দেখানোর নাম<input data-f="label" value="${esc(ch.label)}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label>
+   <label class="block">রোগীর ID প্রিফিক্স (ঐচ্ছিক, যেমন DDC → DDC-0001)<input data-f="prefix" maxlength="6" value="${esc(ch.prefix)}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white font-mono"></label>
+   <label class="flex items-center gap-2 font-semibold"><input type="checkbox" data-f="pad" ${ch.pad?'checked':''} class="w-4 h-4"> প্রিন্টেড প্যাড মোড (হেডার-ফুটার প্রিন্ট হবে না)</label>
+   <div class="grid grid-cols-2 gap-2"><label>উপরে ফাঁকা (মিমি)<input type="number" min="0" max="120" data-f="padTop" value="${+ch.padTop||0}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label><label>নিচে ফাঁকা (মিমি)<input type="number" min="0" max="120" data-f="padBot" value="${+ch.padBot||0}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label></div>
+   <p class="text-[10px] text-slate-500">সাদা কাগজে টেস্ট প্রিন্ট দিয়ে প্যাডের লেটারহেড/ফুটারের মাপ অনুযায়ী ফাঁকা ঠিক করুন।</p>
+   <div><div class="mb-1">এই চেম্বারে বসার দিন (সেদিন অ্যাপ খুললে অটো সিলেক্ট হবে):</div><div class="flex flex-wrap gap-1.5">${DAYS.map(([d,n])=>`<label class="flex items-center gap-1 border rounded px-1.5 py-0.5 bg-white"><input type="checkbox" data-f="day" data-d="${d}" ${ch.days.includes(d)?'checked':''}>${n}</label>`).join('')}</div></div></div>
+  <button data-a="hdrall" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2 rounded-lg">ডাক্তারের হেডার সব চেম্বারে প্রয়োগ করুন</button>
+  <div class="grid grid-cols-2 gap-1.5"><button data-a="export" class="bg-slate-700 text-white font-semibold py-2 rounded-lg"><i class="fa-solid fa-download mr-1"></i> প্রোফাইল এক্সপোর্ট</button><button data-a="import" class="bg-slate-500 text-white font-semibold py-2 rounded-lg"><i class="fa-solid fa-upload mr-1"></i> প্রোফাইল ইম্পোর্ট</button></div>
+  <p class="text-[10px] text-slate-500">পাতায় হেডার/ফুটার/লোগোতে যা বদলাবেন তা অটো এই চেম্বারের প্রোফাইলে সেভ হয়। চেম্বার বদলালেই পুরো প্যাড বদলে যায়। স্বাক্ষর সব চেম্বারে একই।</p>`;}
+window.openChamberModal=function(){if(!P)return;capture(A());saveP();renderModal();$('chamberModal').classList.remove('hidden');};
+window.closeChamberModal=function(){$('chamberModal').classList.add('hidden');};
+function dupC(id){const c=P.chambers.find(x=>x.id===id);if(!c)return;if(id===P.active)capture(c);const n=JSON.parse(JSON.stringify(c));n.id=mk('',[],[]).id;n.label=(c.label+' (কপি)').slice(0,40);P.chambers.push(n);saveP();renderModal();refreshFilter();}
+function delC(id){if(P.chambers.length<2){showToast('সম্ভব নয়','অন্তত একটি চেম্বার রাখতে হবে।');return;}const c=P.chambers.find(x=>x.id===id);if(!c||!confirm('"'+c.label+'" প্রোফাইল মুছবেন? (আগের রোগীর রেকর্ড মুছবে না)'))return;
+  P.chambers=P.chambers.filter(x=>x.id!==id);if(P.active===id){P.active=P.chambers[0].id;saveP();applyActive();}else saveP();renderModal();refreshFilter();}
+function newC(){const label=strip(prompt('নতুন চেম্বার / প্রতিষ্ঠানের নাম:')||'').trim().slice(0,40);if(!label)return;capture(A());const f=FTR_DEF.slice();f[0]=label;
+  const n=mk(label,A().hdr.slice(),f,'');P.chambers.push(n);P.active=n.id;saveP();applyActive();if(!txt('patientName'))put('patientId',nextId());window.closeChamberModal();showToast('নতুন চেম্বার তৈরি','ফুটারে ঠিকানা, সিরিয়াল ও লোগো দিন — অটো-সেভ হবে।');}
+function exportP(){capture(A());saveP();const b=new Blob([JSON.stringify({rxProfiles:1,chambers:P.chambers})],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Rx_Profiles_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);}
+function importP(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.rxProfiles||!Array.isArray(d.chambers)||!d.chambers.length)throw 0;
+  if(!confirm(d.chambers.length+'টি চেম্বার প্রোফাইল যোগ হবে (বর্তমানগুলো থাকবে)। চালিয়ে যাবেন?'))return;
+  d.chambers.forEach(c=>{const n=mk(strip(c.label||'চেম্বার').slice(0,40),(c.hdr||[]).map(String),(c.ftr||[]).map(String),LOGO_OK.test(c.logo||'')?c.logo:'');n.prefix=String(c.prefix||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,6);n.pad=!!c.pad;
+    n.padTop=Math.max(0,Math.min(120,+c.padTop||38));n.padBot=Math.max(0,Math.min(120,+c.padBot||30));n.days=Array.isArray(c.days)?c.days.filter(x=>Number.isInteger(x)&&x>=0&&x<=6):[];P.chambers.push(n);});
+  saveP();renderModal();refreshFilter();showToast('ইম্পোর্ট সম্পন্ন','প্রোফাইল যোগ হয়েছে।');}catch(e){showToast('ত্রুটি','সঠিক প্রোফাইল ফাইল নয়।');}};r.readAsText(f);}
+function buildChamberUi(){const m=document.createElement('div');m.id='chamberModal';m.className='no-print fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3';
+  m.innerHTML='<div class="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden"><div class="bg-sky-800 text-white px-4 py-2.5 flex justify-between items-center"><h3 class="font-bold text-sm"><i class="fa-solid fa-hospital mr-2"></i>চেম্বার / প্রতিষ্ঠান প্রোফাইল</h3><button data-a="close" class="text-lg">✕</button></div><div id="chBody" class="p-3 overflow-y-auto text-xs space-y-3"></div></div><input type="file" id="chImport" accept=".json" class="hidden">';
+  document.body.appendChild(m);
+  m.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+    if(a==='close')closeChamberModal();else if(a==='switch')switchTo(id);else if(a==='dup')dupC(id);else if(a==='del')delC(id);else if(a==='new')newC();else if(a==='export')exportP();else if(a==='import')$('chImport').click();
+    else if(a==='hdrall'&&confirm('বর্তমান হেডার (ডাক্তারের নাম, ডিগ্রি, পদবি) সব চেম্বারে বসবে। চালিয়ে যাবেন?')){capture(A());P.chambers.forEach(c=>{c.hdr=A().hdr.slice();});saveP();showToast('প্রয়োগ হয়েছে','সব চেম্বারে হেডার বসেছে।');}});
+  m.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f||f==='pad'||f==='day')return;const ch=A(),v=e.target.value;
+    if(f==='label')ch.label=strip(v).trim().slice(0,40)||'চেম্বার';else if(f==='prefix'){ch.prefix=v.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,6);e.target.value=ch.prefix;}else ch[f]=Math.max(0,Math.min(120,+v||0));
+    saveP();applyActive();});
+  m.addEventListener('change',e=>{const f=e.target.dataset.f;if(f!=='pad'&&f!=='day')return;const ch=A();
+    if(f==='pad')ch.pad=e.target.checked;else{const d=+e.target.dataset.d;ch.days=e.target.checked?Array.from(new Set(ch.days.concat(d))):ch.days.filter(x=>x!==d);}saveP();applyActive();renderModal();});
+  $('chImport').addEventListener('change',e=>{importP(e.target.files[0]);e.target.value='';});}
+
+/* ---------- records with status + chamber, search, analytics ---------- */
+window.saveCurrentPatientRecord=function(silent,status){const name=txt('patientName');
+  if(!name){if(silent!==true)showToast('নাম লিখুন','আর্কাইভ করার আগে রোগীর নাম লিখুন।');return false;}
+  status=status||'Completed';updateRxCode();const st=captureState(),id=txt('patientId')||String(Date.now()).slice(-6),date=txt('rxDate');
+  const tests=st.investigations.filter(Boolean).join(', '),dx=st.diagnosis.filter(Boolean).join(', ');
+  const rec={patientName:name,id,date,phone:st.patientPhone,status,ts:Date.now(),chamberId:P?A().id:'',chamberName:P?A().label:'',diagnosis:(status==='Pending Test'?(tests||dx):dx)||'N/A',medsCount:st.medicines.length,gender:txt('patientSex')||'M',state:st};
+  const i=appData.savedRecords.findIndex(r=>r.id===id&&(r.status==='Pending Test'||r.date===date));
+  if(i>=0)appData.savedRecords[i]=rec;else appData.savedRecords.unshift(rec);
+  appData.savedRecords.forEach((r,k)=>{if(k>=60)delete r.state;});window.saveAppData();renderStorageTable();
+  if(silent!==true)showToast('আর্কাইভ সংরক্ষিত','রোগী "'+name+'" সফলভাবে স্টোরেজে জমা হয়েছে।');return true;};
+window.printPrescription=function(){window.saveCurrentPatientRecord(true,'Completed');updateRxCode();switchBottomNav('tabPreview');syncPdfFilename();checkAutoZoomFit();setTimeout(()=>window.print(),150);};
+window.renderStorageTable=function(){const tb=$('savedPrescriptionTableBody');if(!tb)return;const q=(($('patSearch')||{}).value||'').trim().toLowerCase(),f=($('chFilter')||{}).value||'';
+  const rs=(appData.savedRecords||[]).map((r,i)=>[r,i]).filter(([r])=>(!q||[r.patientName,r.id,r.phone,r.diagnosis,r.status==='Pending Test'?'pending':''].join(' ').toLowerCase().includes(q))&&(!f||r.chamberId===f));
+  if(!rs.length){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-400">কোনো সংরক্ষিত প্রেসক্রিপশন পাওয়া যায়নি।</td></tr>';return;}
+  tb.innerHTML=rs.map(([r,i])=>`<tr class="hover:bg-slate-50"><td class="p-2.5 font-bold text-slate-800">${esc(r.patientName)}${r.status==='Pending Test'?' <span class="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold">টেস্ট চলছে</span>':''}${r.chamberName?`<div class="text-[9px] text-slate-400 font-normal">${esc(r.chamberName)}</div>`:''}</td><td class="p-2.5 font-mono text-slate-600">${esc(r.id)}</td><td class="p-2.5 text-slate-500">${esc(r.date)}</td><td class="p-2.5 text-rose-800 font-semibold">${esc(r.diagnosis)}</td><td class="p-2.5 text-right space-x-1.5"><button onclick="restoreArchiveRecord(${i})" class="text-sky-700 hover:text-sky-900 font-bold text-xs" title="প্রেসক্রিপশনে লোড করুন"><i class="fa-solid fa-arrow-up-right-from-square"></i> লোড</button><button onclick="deleteArchiveRecord(${i})" class="text-rose-500 hover:text-rose-700 text-xs ml-1"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');};
+function recTime(r){if(r.ts)return r.ts;const m=String(r.date||'').match(/(\d+)\/(\d+)\/(\d+)/);return m?new Date(+m[3],+m[2]-1,+m[1]).getTime():0;}
+const _ra=window.refreshAnalytics;window.refreshAnalytics=function(){_ra();const rs=(appData.savedRecords||[]).filter(r=>r.kind!=='doc'),n=new Date(),d0=new Date(n.getFullYear(),n.getMonth(),n.getDate()).getTime();
+  const c=[d0,d0-6*864e5,new Date(n.getFullYear(),n.getMonth(),1).getTime()].map(t=>rs.filter(r=>recTime(r)>=t).length);const p=$('statTotalPatients').nextElementSibling;if(p)p.textContent='আজ '+c[0]+' • ৭ দিন '+c[1]+' • মাস '+c[2];};
+const _exp=window.exportDatabaseJSON;window.exportDatabaseJSON=function(){if(P)capture(A());saveP();const data=Object.assign({},appData,{__profiles:P,__assets:assets()}),a=document.createElement('a');
+  a.href='data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));a.download='Rx_Prescriptions_Backup_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();};
+const _imp=window.importDatabaseJSON;window.importDatabaseJSON=function(evt){const f=evt.target.files[0];evt.target.value='';if(!f)return;const r=new FileReader();
+  r.onload=e=>{try{const p=JSON.parse(e.target.result);if(!p||!Array.isArray(p.medicines)||!Array.isArray(p.templates))throw 0;if(!confirm('বর্তমান ডাটাবেজ বদলে ব্যাকআপ ফাইলের ডাটা বসবে। চালিয়ে যাবেন?'))return;
+    const pr=p.__profiles,as=p.__assets;delete p.__profiles;delete p.__assets;appData=Object.assign(JSON.parse(JSON.stringify(DEFAULT_STORAGE)),p);ensureData();
+    if(pr&&Array.isArray(pr.chambers)&&pr.chambers.length){P=pr;saveP();}if(as&&typeof as==='object'){safeSet(AS_KEY,JSON.stringify(as));}
+    populateTemplateDropdown();renderStorageTable();applyActive();showToast('ডাটাবেজ পুনরুদ্ধার সম্পন্ন','আপনার সকল তথ্য সফলভাবে ইমপোর্ট হয়েছে।');}catch(err){showToast('ত্রুটি','সঠিক ব্যাকআপ ফাইল নয়।');}};r.readAsText(f);};
+const _lib=window.renderLibraryUI;window.renderLibraryUI=function(){_lib();renderSimpleList('history','libHistList');};
+
+
+/* ---------- settings tab, navigation, PIN, safety hints ---------- */
+const en=s=>String(s).replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d));
+const PREF_KEY='rx_prefs_v1',PIN_KEY='rx_pin_v1';let prefs={};
+function loadPrefs(){try{prefs=JSON.parse(localStorage.getItem(PREF_KEY)||'{}')||{};}catch(e){prefs={};}}
+function savePrefs(){prefs.thermal=thermalOn;safeSet(PREF_KEY,JSON.stringify(prefs));}
+function updateTag(){const t=$('chamberTag');if(P&&t){const ch=A();t.textContent='🏥 '+ch.label+(ch.pad?' • প্রিন্টেড প্যাড':'')+(thermalOn?' • থার্মাল':'');}}
+function fitHeader(){const h=document.querySelector('header');if(h)root.style.setProperty('--hdrH',h.offsetHeight+'px');}
+const TABS={tabPreview:'navBtnPreview',tabEmergency:'navBtnEmergency',tabStorage:'navBtnStorage',tabAnalytics:'navBtnAnalytics',tabSettings:'navBtnSettings'};
+window.switchBottomNav=function(k){if(!TABS[k])k='tabPreview';qsa('.tab-view').forEach(v=>v.classList.add('hidden'));
+  qsa('.bottom-nav-item').forEach(b=>{b.classList.remove('text-sky-700','active');b.classList.add('text-slate-500');});
+  $(k+'View').classList.remove('hidden');const nb=$(TABS[k]);nb.classList.add('text-sky-700','active');nb.classList.remove('text-slate-500');
+  if(k==='tabStorage')renderStorageTable();if(k==='tabAnalytics')refreshAnalytics();if(k==='tabSettings')renderHub();
+  window.scrollTo({top:0,behavior:'smooth'});};
+function renderHub(){if(!P||!$('hubChamber'))return;const ch=A();$('hubChamber').textContent=ch.label;$('hubPad').checked=!!ch.pad;$('hubPadTop').value=+ch.padTop||0;$('hubPadBot').value=+ch.padBot||0;
+  $('chkThermal').checked=thermalOn;$('hubPin').textContent=localStorage.getItem(PIN_KEY)?'চালু আছে':'বন্ধ';
+  const sw=navigator.serviceWorker&&navigator.serviceWorker.controller;
+  $('hubNet').textContent=(navigator.onLine?'অনলাইন':'অফলাইন')+' • '+(sw?'অফলাইন ক্যাশ প্রস্তুত ✓':'অফলাইন ক্যাশ এখনো হয়নি (https/localhost থেকে একবার অনলাইনে খুলুন)');}
+window.hubSet=function(f,el){const ch=A();if(f==='pad')ch.pad=el.checked;else ch[f]=Math.max(0,Math.min(120,+el.value||0));saveP();applyActive();};
+window.hubThermal=function(on){window.toggleThermal(on);};
+window.clearArchive=function(){if(!confirm('সব সংরক্ষিত রোগীর রেকর্ড মুছে যাবে। ব্যাকআপ নিয়েছেন তো? চালিয়ে যাবেন?')||!confirm('নিশ্চিত? এটি ফেরানো যাবে না।'))return;
+  appData.savedRecords=[];window.saveAppData();renderStorageTable();refreshAnalytics();showToast('মুছে ফেলা হয়েছে','সকল রোগীর রেকর্ড মুছেছে।');};
+window.addEventListener('online',renderHub);window.addEventListener('offline',renderHub);
+/* duplicate / same-class medicine hint (editor only, never printed) */
+const CLS={'alpha-blocker':['prazosin','tamsulosin','doxazosin','terazosin','alfuzosin'],'PPI':['omeprazole','esomeprazole','pantoprazole','rabeprazole','lansoprazole'],'statin':['atorvastatin','rosuvastatin','simvastatin','pravastatin'],'beta-blocker':['bisoprolol','metoprolol','atenolol','carvedilol','propranolol','nebivolol'],'ARB':['telmisartan','losartan','valsartan','olmesartan','candesartan','irbesartan'],'ACE inhibitor':['enalapril','ramipril','lisinopril','perindopril','captopril'],'NSAID':['ibuprofen','diclofenac','ketorolac','naproxen','aceclofenac','etoricoxib','ketoprofen']};
+function renderMedWarn(){const el=$('medWarn');if(!el)return;const seen={},msgs=[];
+  getDOMMedicines().forEach(m=>{const g=String(m.generic||'').toLowerCase().replace(/[^a-z]+/g,' ').trim();if(g)seen[g]=(seen[g]||0)+1;});
+  Object.keys(seen).forEach(g=>{if(seen[g]>1)msgs.push('একই জেনেরিক দুবার: '+g);});
+  Object.entries(CLS).forEach(([c,l])=>{const f=Object.keys(seen).filter(g=>l.some(x=>g.indexOf(x)>=0));if(f.length>1)msgs.push(c+' একাধিক: '+f.join(', '));});
+  el.classList.toggle('hidden',!msgs.length);el.textContent=msgs.length?'⚠ পরামর্শমূলক সতর্কতা (প্রিন্টে যাবে না): '+msgs.join(' • '):'';}
+/* simple app lock (convenience lock, not encryption) */
+function h53(s){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);}
+const pinHash=p=>h53('rx|'+en(p));
+function lockScreen(){if(!localStorage.getItem(PIN_KEY)||$('pinLock'))return;const o=document.createElement('div');o.id='pinLock';o.className='no-print fixed inset-0 z-[100] bg-sky-900 flex items-center justify-center p-4';
+  o.innerHTML='<div class="bg-white rounded-xl shadow-2xl p-5 w-full max-w-xs text-center space-y-3"><div class="text-3xl">🔒</div><h3 class="font-bold text-slate-800">Rx Pro লক করা আছে</h3><input id="pinInput" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="PIN" class="w-full border rounded px-3 py-2 text-center text-lg"><p id="pinErr" class="text-xs text-rose-600 h-4"></p><button id="pinBtn" class="w-full bg-sky-700 hover:bg-sky-800 text-white font-bold py-2 rounded-lg">খুলুন</button></div>';
+  document.body.appendChild(o);const go=()=>{if(pinHash($('pinInput').value)===localStorage.getItem(PIN_KEY))o.remove();else{$('pinErr').textContent='ভুল PIN';$('pinInput').value='';}};
+  $('pinBtn').onclick=go;$('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')go();});setTimeout(()=>$('pinInput').focus(),50);}
+window.lockNow=function(){if(!localStorage.getItem(PIN_KEY)){showToast('PIN নেই','আগে একটি PIN সেট করুন।');return;}lockScreen();};
+window.setPin=function(){const p=prompt('নতুন PIN (৪–৬ সংখ্যা):');if(p===null)return;if(!/^\d{4,6}$/.test(en(p))){showToast('ত্রুটি','PIN ৪ থেকে ৬ সংখ্যার হতে হবে।');return;}
+  if(prompt('আবার লিখুন:')!==p){showToast('মেলেনি','দুবারের PIN মেলেনি।');return;}safeSet(PIN_KEY,pinHash(p));renderHub();showToast('PIN চালু','পরের বার অ্যাপ খুললে PIN লাগবে। ভুলে গেলে ব্রাউজারের সাইট-ডাটা মুছতে হবে (রোগীর রেকর্ডসহ) — তাই ব্যাকআপ রাখুন।');};
+window.removePin=function(){const st=localStorage.getItem(PIN_KEY);if(!st)return;const p=prompt('বর্তমান PIN লিখুন:');if(p!==null&&pinHash(p)===st){localStorage.removeItem(PIN_KEY);renderHub();showToast('PIN বন্ধ','অ্যাপ লক বন্ধ হয়েছে।');}else if(p!==null)showToast('ভুল PIN','PIN মেলেনি।');};
+
+/* ---------- start-up ---------- */
+window.initApp=function(){ensureData();populateTemplateDropdown();loadP();loadPrefs();buildDrawer();buildChamberUi();applyAssets();lockScreen();
+  const tb=$('savedPrescriptionTableBody'),wrap=tb&&tb.closest('.border.rounded-lg');
+  if(wrap){const bx=document.createElement('div');bx.className='grid grid-cols-2 gap-2 mb-2';bx.innerHTML='<input id="patSearch" placeholder="🔍 নাম / ID / ফোন / pending" class="border rounded px-2 py-1.5 text-xs w-full"><select id="chFilter" class="border rounded px-2 py-1.5 text-xs w-full bg-white"></select>';wrap.parentNode.insertBefore(bx,wrap);
+    $('patSearch').oninput=renderStorageTable;$('chFilter').onchange=renderStorageTable;}
+  let st=null;try{st=JSON.parse(localStorage.getItem(ST_KEY)||'null');}catch(e){}
+  if(st&&typeof st==='object')restoreState(st);else window.newPatient(true);
+  applyChamberTexts();
+  const today=new Date().getDay(),hit=P.chambers.filter(c=>c.days.includes(today));
+  if(hit.length===1&&hit[0].id!==P.active&&!txt('patientName')){P.active=hit[0].id;saveP();applyChamberTexts();put('patientId',nextId());showToast('আজকের চেম্বার',hit[0].label);}
+  ['newMedInput','newComplaintInput','newDiagInput','newInvInput','newRefInput','newHistInput'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',()=>{e.value=strip(e.value);});});
+  syncBinds();updateRxCode();undoStack=[];redoStack=[];recordState();checkAutoZoomFit();renderStorageTable();if(prefs.thermal)window.toggleThermal(true);renderHub();fitHeader();window.addEventListener('resize',fitHeader);};
+
+/* ===================== v4 additions ===================== */
+const qs=(s,r=document)=>r.querySelector(s);
+let docType='emergency',printingUntil=0;
+const padOn=()=>!!(P&&A().pad)&&!thermalOn&&!body.classList.contains('lab-slip-mode');
+const U='______';
+
+/* ---------- documents: emergency pad, certificates, blank page ---------- */
+function patientInfo(){const j=sel=>spans(sel).filter(Boolean).join(', ');
+  return{name:txt('patientName')||U,age:txt('patientAge')||U,sex:txt('patientSex')||U,id:txt('patientId')||U,date:txt('rxDate')||todayStr(),
+    dx:j('#diagnosisList'),cc:j('#complaintsList'),hx:j('#historyList'),inv:j('#investigationList'),
+    meds:getDOMMedicines().map((m,i)=>(i+1)+'. '+m.brand+' '+m.generic+' — '+m.dose+' — '+m.duration).join('\n')};}
+const DOCS={
+ emergency:{name:'জরুরি প্যাড (প্রেসক্রিপশন)',title:'জরুরি প্রেসক্রিপশন / EMERGENCY',
+  text:p=>'BP: ______   Pulse: ______   SpO2: ______   Temp: ______   RBS: ______\n\nC/C: '+p.cc+'\n\nDiagnosis: '+p.dx+'\n\nRx:\n\n\nAdvice:\n'},
+ illness:{name:'মেডিকেল সার্টিফিকেট (অসুস্থতা / বিশ্রাম)',title:'মেডিকেল সার্টিফিকেট',
+  text:p=>'তারিখ: '+p.date+'\n\nএই মর্মে প্রত্যয়ন করা যাচ্ছে যে, '+p.name+', বয়স '+p.age+', লিঙ্গ '+p.sex+' (আইডি: '+p.id+'), অসুস্থতাজনিত কারণে আমার তত্ত্বাবধানে চিকিৎসাধীন আছেন।\n\nরোগ নির্ণয়: '+(p.dx||'____________________')+'\n\nতাঁকে ____/____/________ হতে ____/____/________ পর্যন্ত, মোট ____ দিন পূর্ণ বিশ্রামের পরামর্শ দেওয়া হলো।\n\n\nচিকিৎসকের স্বাক্ষর ও সিল:'},
+ fitness:{name:'ফিটনেস সার্টিফিকেট (শারীরিক সুস্থতা)',title:'ফিটনেস সার্টিফিকেট',
+  text:p=>'তারিখ: '+p.date+'\n\nএই মর্মে প্রত্যয়ন করা যাচ্ছে যে, '+p.name+', বয়স '+p.age+', লিঙ্গ '+p.sex+' (আইডি: '+p.id+') কে আজ আমি পরীক্ষা করেছি। পরীক্ষান্তে তাঁকে ____________________ (কাজ / পড়াশোনা / ভ্রমণ / খেলাধুলা) এর জন্য শারীরিকভাবে সুস্থ ও উপযুক্ত (Fit) পাওয়া গেছে।\n\nপরীক্ষার তথ্য: BP ______   Pulse ______   Weight ______\n\n\nচিকিৎসকের স্বাক্ষর ও সিল:'},
+ referral:{name:'রেফারেল / হস্তান্তর চিঠি',title:'রেফারেল লেটার / REFERRAL',
+  text:p=>'Date: '+p.date+'\n\nTo,\nDr. ____________________\n____________________\n\nDear Colleague,\nPlease see and advise '+p.name+', '+p.age+' / '+p.sex+' (ID: '+p.id+').\n\nPresenting complaints: '+(p.cc||U)+'\nHistory: '+(p.hx||U)+'\nImpression: '+(p.dx||U)+'\nInvestigations: '+(p.inv||U)+'\nTreatment given: ____________________\n\nThank you for your kind cooperation.\n\nSincerely,'},
+ summary:{name:'মেডিকেল সামারি / রিপোর্ট',title:'মেডিকেল সামারি',
+  text:p=>'তারিখ: '+p.date+'\nরোগী: '+p.name+', বয়স '+p.age+', লিঙ্গ '+p.sex+' (আইডি: '+p.id+')\n\nপ্রধান সমস্যা: '+(p.cc||U)+'\nপূর্ব ইতিহাস: '+(p.hx||U)+'\nরোগ নির্ণয়: '+(p.dx||U)+'\nপরীক্ষা-নিরীক্ষা: '+(p.inv||U)+'\n\nপ্রদত্ত চিকিৎসা:\n'+(p.meds||'____________________')+'\n\nপরামর্শ: ____________________'},
+ blank:{name:'খালি পাতা (শুধু হেডার-ফুটার)',title:'',text:()=>''}
+};
+function setDocMode(on){blankOn=!!on;CANVAS().classList.toggle('blank-pad-active',blankOn);const tb=$('docToolbar');if(tb)tb.classList.toggle('hidden',!blankOn);
+  const sel=$('docType');if(sel)sel.value=docType;checkAutoZoomFit();}
+function setBlank(on){setDocMode(on);}
+function applyDocType(t,force){const d=DOCS[t];if(!d||!$('docBody'))return;
+  if(!force&&$('docBody').innerText.trim()&&!confirm('বর্তমান লেখা বদলে নতুন ধরনের ফরম্যাট বসবে। চালিয়ে যাবেন?')){$('docType').value=docType;return;}
+  recordState();docType=t;if($('docType'))$('docType').value=t;$('docTitle').innerText=d.title;$('docBody').innerText=d.text(patientInfo());triggerAutoSave();checkAutoZoomFit();}
+window.docTypeChange=function(v){applyDocType(v,false);};
+window.docRefill=function(){applyDocType(docType,false);};
+function buildDocLists(){const l=$('docMedList');if(l)l.innerHTML=appData.medicines.map(m=>'<option value="'+esc(m.brand)+'">'+esc(m.generic)+'</option>').join('');}
+window.docAddMed=function(){const inp=$('docMedIn'),v=strip(inp.value).trim();if(!v)return;const lv=v.toLowerCase();
+  const m=appData.medicines.find(x=>x.brand.toLowerCase()===lv||(x.brand+' '+x.generic).toLowerCase()===lv);
+  const line='• '+(m?m.brand+(m.generic?' '+m.generic:'')+' — '+m.dose+' — '+m.duration:v);const b=$('docBody');recordState();let t=b.innerText.replace(/\s+$/,'');
+  const k=t.search(/\n*Advice:/);t=(/Rx:/.test(t)&&k>=0)?t.slice(0,k).replace(/\s+$/,'')+'\n'+line+'\n\n'+t.slice(k).replace(/^\n+/,''):(t?t+'\n':'')+line;
+  b.innerText=t;inp.value='';triggerAutoSave();checkAutoZoomFit();};
+function captureState(){return{patientName:txt('patientName'),patientAge:txt('patientAge'),patientPhone:txt('patientPhone'),patientSex:txt('patientSex'),patientId:txt('patientId'),rxDate:txt('rxDate'),patientAddress:txt('patientAddress'),
+  referredTo:txt('referredToField'),specialNotes:txt('specialNotesField'),vitals:vit().map(e=>e.innerText.trim()),medicines:getDOMMedicines(),
+  complaints:spans('#complaintsList'),history:spans('#historyList'),diagnosis:spans('#diagnosisList'),investigations:spans('#investigationList'),advice:spans('#adviceList'),
+  doc:{on:!!blankOn,type:docType,title:txt('docTitle'),text:$('docBody')?$('docBody').innerText.replace(/\s+$/,''):''}};}
+function restoreState(s){['patientName','patientAge','patientPhone','patientSex','patientId','rxDate','patientAddress'].forEach(k=>put(k,s[k]));
+  put('referredToField',s.referredTo);put('specialNotesField',s.specialNotes);
+  vit().forEach((e,i)=>{e.innerText=(s.vitals&&s.vitals[i])||'';});
+  fillList('complaintsList',s.complaints);fillList('historyList',s.history);fillList('diagnosisList',s.diagnosis);fillList('investigationList',s.investigations);fillList('adviceList',s.advice);
+  renderMedicines(s.medicines||[]);
+  if(s.doc){docType=DOCS[s.doc.type]?s.doc.type:'emergency';put('docTitle',s.doc.title||'');if($('docBody'))$('docBody').innerText=s.doc.text||'';setDocMode(!!s.doc.on);}else setDocMode(false);
+  markPh();}
+
+/* ---------- empty-state hint for the medicine area ---------- */
+function renderEmpty(){const e=$('medEmpty');if(e)e.classList.toggle('hidden',!!qsa('.med-row',CANVAS()).length||blankOn);}
+const _umg=window.updateMedicineGridAndCapacity;window.updateMedicineGridAndCapacity=function(){_umg();renderEmpty();};
+
+/* ---------- multi-chamber promotional footer ---------- */
+function renderFooterMulti(){const box=$('footerMulti'),con=qs('.footer-contact',CANVAS());if(!box||!P)return;const on=!!P.footerMulti;
+  if(con)con.style.display=on?'none':'';
+  if(!on){box.style.display='none';box.innerHTML='';return;}
+  const list=P.chambers.filter(c=>c.inFooter!==false),n=Math.max(1,list.length),dn=c=>DAYS.filter(d=>(c.days||[]).includes(d[0])).map(d=>d[1]).join(', ');
+  box.style.cssText='display:grid;grid-template-columns:repeat('+Math.min(n,3)+',minmax(0,1fr));gap:4px';
+  box.innerHTML=list.map(c=>{const f=c.ftr||[],L=(x,cls)=>x?'<div'+(cls?' class="'+cls+'"':'')+'>'+esc(x)+'</div>':'';
+    const visit=c.visit||((f[4]||'')+((c.days&&c.days.length)?' • দিন: '+dn(c):''));
+    const logo=LOGO_OK.test(c.logo||'')?'<img src="'+c.logo+'" class="w-7 h-7 object-contain rounded shrink-0">':'';
+    return '<div class="bg-slate-50 border border-slate-200 rounded p-1 flex gap-1 items-start text-[8.5px] leading-tight">'+logo+'<div class="min-w-0 break-words">'+L(f[0],'font-bold text-slate-800 text-[9.5px]')+L(f[1])+L(f[2])+L(f[3],'font-semibold text-rose-700')+L(visit,'text-slate-600')+'</div></div>';}).join('');}
+function applyChamberTexts(){if(!P)return;const ch=A();setTexts(HDR(),ch.hdr);setTexts(foot(),ch.ftr);
+  const a=assets();if(ch.logo)a.logo=ch.logo;else delete a.logo;safeSet(AS_KEY,JSON.stringify(a));applyAssets();
+  const r=root.style;r.setProperty('--padTop',(+ch.padTop||0)+'mm');r.setProperty('--padBot',(+ch.padBot||0)+'mm');body.classList.toggle('pad-mode',!!ch.pad);
+  updateTag();renderFooterMulti();refreshFilter();renderHub();}
+window.removeSig=function(){setAsset('sig',null);};
+window.hubMulti=function(el){P.footerMulti=el.checked;saveP();applyActive();};
+
+/* ---------- chamber modal (addresses, logo, visiting time/days) ---------- */
+const FLBL=['নাম','ঠিকানা','মোবাইল','অগ্রিম সিরিয়াল','সময়','হটলাইন','ইমেইল','ওয়েব'];
+function renderModal(){const b=$('chBody');if(!b||!P)return;const ch=A(),f=ch.ftr||[];
+  b.innerHTML=`<div class="space-y-1.5">${P.chambers.map(c=>`<div data-a="switch" data-id="${c.id}" class="flex items-center justify-between gap-2 p-2 rounded-lg border cursor-pointer ${c.id===P.active?'border-sky-600 bg-sky-50':'border-slate-200 hover:bg-slate-50'}"><div class="flex items-center gap-2 min-w-0">${LOGO_OK.test(c.logo||'')?`<img src="${c.logo}" class="w-8 h-8 object-contain rounded border bg-white">`:'<div class="w-8 h-8 rounded border bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-hospital"></i></div>'}<div class="min-w-0"><div class="font-bold text-slate-900 truncate">${c.id===P.active?'● ':''}${esc(c.label)}</div><div class="text-[10px] text-slate-500 truncate">${esc((c.ftr&&c.ftr[1])||'')}${c.prefix?' • ID: '+esc(c.prefix)+'-…':''}${c.pad?' • প্রিন্টেড প্যাড':''}</div></div></div><div class="flex gap-3 text-sm shrink-0"><button data-a="dup" data-id="${c.id}" title="কপি" class="text-sky-700"><i class="fa-regular fa-copy"></i></button><button data-a="del" data-id="${c.id}" title="মুছুন" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}</div>
+  <button data-a="new" class="w-full bg-sky-700 hover:bg-sky-800 text-white font-bold py-2 rounded-lg">+ নতুন চেম্বার / প্রতিষ্ঠান যোগ করুন</button>
+  <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2"><div class="font-bold text-slate-800">বর্তমান চেম্বারের তথ্য ও ফুটার</div>
+   <label class="block">তালিকায় দেখানোর নাম<input data-f="label" value="${esc(ch.label)}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label>
+   <div class="grid grid-cols-2 gap-2">${FLBL.map((l,i)=>`<label class="block ${i<2?'col-span-2':''}">${l}<input data-f="ftr${i}" value="${esc(f[i]||'')}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label>`).join('')}</div>
+   <label class="block">রোগী দেখার দিন ও সময় (প্রচার-ফুটারে দেখাবে; ফাঁকা রাখলে "সময়" ও নিচের দিন থেকে নেবে)<input data-f="visit" value="${esc(ch.visit||'')}" placeholder="যেমন: শনি–বৃহঃ, বিকাল ৪টা–রাত ৯টা" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label>
+   <div><div class="mb-1">বসার দিন (সেদিন অ্যাপ খুললে এই চেম্বার অটো সিলেক্ট হবে):</div><div class="flex flex-wrap gap-1.5">${DAYS.map(([d,n])=>`<label class="flex items-center gap-1 border rounded px-1.5 py-0.5 bg-white"><input type="checkbox" data-f="day" data-d="${d}" ${(ch.days||[]).includes(d)?'checked':''}>${n}</label>`).join('')}</div></div>
+   <div class="flex items-center gap-2"><div class="w-12 h-12 rounded border bg-white overflow-hidden flex items-center justify-center text-slate-300">${LOGO_OK.test(ch.logo||'')?`<img src="${ch.logo}" class="w-full h-full object-cover">`:'<i class="fa-solid fa-image"></i>'}</div>
+    <label class="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-3 py-1.5 rounded-lg cursor-pointer">লোগো / ছবি দিন<input type="file" accept="image/*" onchange="handleLogoChange(event)" class="hidden"></label>
+    <button data-a="rmlogo" class="text-rose-600 font-semibold">মুছুন</button></div>
+   <label class="flex items-center gap-2"><input type="checkbox" data-f="inFooter" ${ch.inFooter!==false?'checked':''} class="w-4 h-4"> এই চেম্বার প্রচার-ফুটারে দেখান</label>
+  </div>
+  <div class="border rounded-lg p-2.5 bg-amber-50/70 space-y-1.5"><label class="flex items-center gap-2 font-bold text-amber-950"><input type="checkbox" data-f="multi" ${P.footerMulti?'checked':''} class="w-4 h-4"> ফুটারে সব চেম্বারের ঠিকানা ও লোগো দেখান (প্রচার মোড)</label>
+   <p class="text-[10px] text-slate-600">চালু করলে ফুটারে প্রতিটি চেম্বারের কার্ড (লোগো, নাম, ঠিকানা, সিরিয়াল, দিন-সময়) পাশাপাশি ছাপা হবে। ঠিকানা বদলাতে ওপরের ঘরগুলো ব্যবহার করুন।</p></div>
+  <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2"><div class="font-bold text-slate-800">আইডি ও প্রিন্টেড প্যাড</div>
+   <label class="block">রোগীর ID প্রিফিক্স (ঐচ্ছিক, যেমন DDC → DDC-0001)<input data-f="prefix" maxlength="6" value="${esc(ch.prefix)}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white font-mono"></label>
+   <label class="flex items-center gap-2 font-semibold"><input type="checkbox" data-f="pad" ${ch.pad?'checked':''} class="w-4 h-4"> প্রিন্টেড প্যাড মোড (হেডার-ফুটার প্রিন্ট হবে না)</label>
+   <div class="grid grid-cols-2 gap-2"><label>উপরে ফাঁকা (মিমি)<input type="number" min="0" max="120" data-f="padTop" value="${+ch.padTop||0}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label><label>নিচে ফাঁকা (মিমি)<input type="number" min="0" max="120" data-f="padBot" value="${+ch.padBot||0}" class="mt-0.5 w-full border rounded px-2 py-1.5 bg-white"></label></div></div>
+  <button data-a="hdrall" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2 rounded-lg">ডাক্তারের হেডার সব চেম্বারে প্রয়োগ করুন</button>
+  <div class="grid grid-cols-2 gap-1.5"><button data-a="export" class="bg-slate-700 text-white font-semibold py-2 rounded-lg"><i class="fa-solid fa-download mr-1"></i> প্রোফাইল এক্সপোর্ট</button><button data-a="import" class="bg-slate-500 text-white font-semibold py-2 rounded-lg"><i class="fa-solid fa-upload mr-1"></i> প্রোফাইল ইম্পোর্ট</button></div>`;}
+function buildChamberUi(){const m=document.createElement('div');m.id='chamberModal';m.className='no-print fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-3';
+  m.innerHTML='<div class="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden"><div class="bg-sky-800 text-white px-4 py-2.5 flex justify-between items-center"><h3 class="font-bold text-sm"><i class="fa-solid fa-hospital mr-2"></i>চেম্বার / প্রতিষ্ঠান প্রোফাইল</h3><button data-a="close" class="text-lg">✕</button></div><div id="chBody" class="p-3 overflow-y-auto text-xs space-y-3"></div></div><input type="file" id="chImport" accept=".json" class="hidden">';
+  document.body.appendChild(m);
+  m.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+    if(a==='close')closeChamberModal();else if(a==='switch')switchTo(id);else if(a==='dup')dupC(id);else if(a==='del')delC(id);else if(a==='new')newC();else if(a==='export')exportP();else if(a==='import')$('chImport').click();
+    else if(a==='rmlogo'){setAsset('logo',null);}
+    else if(a==='hdrall'&&confirm('বর্তমান হেডার (ডাক্তারের নাম, ডিগ্রি, পদবি) সব চেম্বারে বসবে। চালিয়ে যাবেন?')){capture(A());P.chambers.forEach(c=>{c.hdr=A().hdr.slice();});saveP();showToast('প্রয়োগ হয়েছে','সব চেম্বারে হেডার বসেছে।');}});
+  m.addEventListener('input',e=>{const f=e.target.dataset.f;if(!f||f==='pad'||f==='day'||f==='inFooter'||f==='multi')return;const ch=A(),v=e.target.value;
+    if(f==='label')ch.label=strip(v).trim().slice(0,40)||'চেম্বার';
+    else if(f==='prefix'){ch.prefix=v.replace(/[^A-Za-z0-9]/g,'').toUpperCase().slice(0,6);e.target.value=ch.prefix;}
+    else if(f==='visit')ch.visit=strip(v).slice(0,120);
+    else if(/^ftr\d$/.test(f)){ch.ftr=ch.ftr||[];while(ch.ftr.length<8)ch.ftr.push('');ch.ftr[+f[3]]=strip(v);}
+    else ch[f]=Math.max(0,Math.min(120,+v||0));
+    saveP();applyActive();});
+  m.addEventListener('change',e=>{const f=e.target.dataset.f;if(f!=='pad'&&f!=='day'&&f!=='inFooter'&&f!=='multi')return;const ch=A();
+    if(f==='pad')ch.pad=e.target.checked;else if(f==='inFooter')ch.inFooter=e.target.checked;else if(f==='multi')P.footerMulti=e.target.checked;
+    else{const d=+e.target.dataset.d;ch.days=e.target.checked?Array.from(new Set((ch.days||[]).concat(d))):(ch.days||[]).filter(x=>x!==d);}
+    saveP();applyActive();renderModal();});
+  $('chImport').addEventListener('change',e=>{importP(e.target.files[0]);e.target.value='';});}
+const _sa=setAsset;
+function renderHub(){if(!P||!$('hubChamber'))return;const ch=A(),a=assets();$('hubChamber').textContent=ch.label;$('hubPad').checked=!!ch.pad;$('hubPadTop').value=+ch.padTop||0;$('hubPadBot').value=+ch.padBot||0;
+  $('chkThermal').checked=thermalOn;$('hubMulti').checked=!!P.footerMulti;$('hubPin').textContent=localStorage.getItem(PIN_KEY)?'চালু আছে':'বন্ধ';
+  $('hubLogoPrev').innerHTML=a.logo?'<img src="'+a.logo+'" class="w-full h-full object-cover">':'<i class="fa-solid fa-image text-slate-300"></i>';
+  $('hubSigPrev').innerHTML=a.sig?'<img src="'+a.sig+'" class="max-h-full max-w-full object-contain">':'<i class="fa-solid fa-signature text-slate-300"></i>';
+  const sw=navigator.serviceWorker&&navigator.serviceWorker.controller;
+  $('hubNet').textContent=(navigator.onLine?'অনলাইন':'অফলাইন')+' • '+(sw?'অফলাইন ক্যাশ প্রস্তুত ✓':'অফলাইন ক্যাশ এখনো হয়নি (https/localhost থেকে একবার অনলাইনে খুলুন)');}
+
+/* ---------- one-page print: isolated sheet, auto-fit (shrink or grow) for A4 and Letter ---------- */
+function needHeight(){const c=CANVAS().cloneNode(true);c.removeAttribute('id');qsa('[id]',c).forEach(e=>e.removeAttribute('id'));c.classList.add('print-sim');
+  c.style.cssText='position:absolute;left:-10000px;top:0;visibility:hidden';
+  [['width','210mm'],['height','auto'],['max-height','none'],['min-height','0'],['zoom','1'],['padding','0 10mm'],['transform','none'],['overflow','visible'],['display','flex'],['flex-direction','column'],['border-radius','0'],['box-shadow','none'],['border','0']].forEach(([k,v])=>c.style.setProperty(k,v,'important'));
+  qsa('.no-print',c).forEach(e=>e.remove());if(padOn())qsa('.header-section,.footer-section',c).forEach(e=>e.remove());
+  document.body.appendChild(c);const h=c.getBoundingClientRect().height;c.remove();return h;}
+function zFor(content,pageMm,padMm){const avail=(pageMm-padMm-1.5)*96/25.4;return Math.round(Math.max(0.6,Math.min(1.06,avail/content*0.985))*100)/100;}
+function removeSheet(force){if(!force&&Date.now()<printingUntil)return;const w=$('printSheet');if(w)w.remove();body.classList.remove('sheet-on');}
+function buildSheet(){removeSheet(true);const c=CANVAS().cloneNode(true);c.removeAttribute('id');qsa('[id]',c).forEach(e=>e.removeAttribute('id'));
+  qsa('.no-print',c).forEach(e=>e.remove());qsa('[contenteditable]',c).forEach(e=>e.removeAttribute('contenteditable'));c.classList.add('print-lay');
+  const w=document.createElement('div');w.id='printSheet';w.appendChild(c);document.body.appendChild(w);body.classList.add('sheet-on');printingUntil=Date.now()+60000;}
+window.checkAutoZoomFit=function(){if(!CANVAS())return;removeSheet(false);
+  const skip=thermalOn||body.classList.contains('lab-slip-mode'),po=padOn();let zA=1,zL=1,zS=1,bad=false;
+  if(!skip){const h=needHeight(),padP=po?(+A().padTop||0)+(+A().padBot||0):11;zA=zFor(h,297,padP);zL=zFor(h,279.4,padP);zS=zFor(h,296,po?padP:14);
+    bad=h*0.6>(279.4-padP-1.5)*96/25.4;}
+  root.style.setProperty('--fitA4',zA);root.style.setProperty('--fitLt',zL);root.style.setProperty('--fitScr',zS);
+  const st=bad?'over':'ok';if(st!==zState){zState=st;if(bad)showToast('সতর্কতা: লেখা অনেক বেশি','সর্বনিম্ন স্কেলেও এক পাতায় ধরছে না। কিছু লেখা কমান, নইলে নিচের অংশ প্রিন্টে কাটা পড়বে।');}
+  renderMedWarn();renderEmpty();};
+window.addEventListener('beforeprint',()=>{checkAutoZoomFit();buildSheet();});
+window.addEventListener('afterprint',()=>{printingUntil=0;removeSheet(true);});
+window.printPrescription=function(){window.saveCurrentPatientRecord(true,'Completed');updateRxCode();syncPdfFilename();checkAutoZoomFit();buildSheet();setTimeout(()=>window.print(),150);};
+window.printLabSlip=function(){if(blankOn){showToast('ল্যাব স্লিপ','ল্যাব স্লিপ প্রেসক্রিপশন ট্যাব থেকে দিন।');return;}
+  if(window.saveCurrentPatientRecord(true,'Pending Test')===false){showToast('নাম লিখুন','ল্যাব স্লিপের আগে রোগীর নাম লিখুন।');return;}
+  closeToolsDrawer();body.classList.add('lab-slip-mode');document.title='Lab-Slip - '+txt('patientName')+' [ID-'+txt('patientId')+']';
+  checkAutoZoomFit();buildSheet();setTimeout(()=>window.print(),150);setTimeout(()=>body.classList.remove('lab-slip-mode'),180000);};
+
+/* ---------- navigation incl. emergency pad / certificates tab ---------- */
+window.switchBottomNav=function(k){if(!TABS[k])k='tabPreview';qsa('.tab-view').forEach(v=>v.classList.add('hidden'));
+  qsa('.bottom-nav-item').forEach(b=>{b.classList.remove('text-sky-700','active');b.classList.add('text-slate-500');});
+  $((k==='tabEmergency'?'tabPreview':k)+'View').classList.remove('hidden');const nb=$(TABS[k]);nb.classList.add('text-sky-700','active');nb.classList.remove('text-slate-500');
+  if(k==='tabEmergency'){if(!blankOn){recordState();setDocMode(true);}if(!txt('docBody')&&!txt('docTitle'))applyDocType(docType,true);buildDocLists();triggerAutoSave();}
+  else if(k==='tabPreview'&&blankOn){recordState();setDocMode(false);triggerAutoSave();}
+  if(k==='tabStorage')renderStorageTable();if(k==='tabAnalytics')refreshAnalytics();if(k==='tabSettings')renderHub();
+  window.scrollTo({top:0,behavior:'smooth'});};
+
+/* ---------- records / WhatsApp for documents ---------- */
+window.sendWhatsApp=function(){let ph=txt('patientPhone').replace(/[০-৯]/g,d=>'০১২৩৪৫৬৭৮৯'.indexOf(d)).replace(/\D/g,'');
+  if(ph.startsWith('880')){}else if(ph.startsWith('0'))ph='88'+ph;else if(ph.length===10&&ph[0]==='1')ph='880'+ph;
+  if(ph.length<12){showToast('ফোন নম্বর দিন','রোগীর ফোন-ঘরে সঠিক নম্বর (01711XXXXXX) লিখুন।');return;}
+  let msg;
+  if(blankOn)msg='*'+(txt('docTitle')||'ডকুমেন্ট')+'*\nরোগী: '+txt('patientName')+'\nচিকিৎসক: '+txt('docNameBn')+'\n\n'+$('docBody').innerText.trim();
+  else{const st=captureState(),meds=st.medicines.map((m,i)=>(i+1)+'. '+m.brand+' '+m.generic+'\n    '+m.dose+' • '+m.duration).join('\n'),adv=st.advice.filter(Boolean).map(a=>'• '+a).join('\n'),dx=st.diagnosis.filter(Boolean).join(', ');
+    msg='*ডিজিটাল প্রেসক্রিপশন সামারি*\nরোগী: '+st.patientName+'\nতারিখ: '+st.rxDate+'\nচিকিৎসক: '+txt('docNameBn')+'\n'+(dx?'রোগ-নির্ণয়: '+dx+'\n':'')+'\n*ঔষধ:*\n'+(meds||'—')+'\n'+(adv?'\n*পরামর্শ:*\n'+adv+'\n':'')+'\nসুস্থ থাকুন।';}
+  window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank');};
+window.saveCurrentPatientRecord=function(silent,status){const name=txt('patientName');
+  if(!name){if(silent!==true)showToast('নাম লিখুন','আর্কাইভ করার আগে রোগীর নাম লিখুন।');return false;}
+  status=status||'Completed';updateRxCode();const st=captureState(),id=txt('patientId')||String(Date.now()).slice(-6),date=txt('rxDate'),isDoc=!!blankOn;
+  const tests=st.investigations.filter(Boolean).join(', '),dx=st.diagnosis.filter(Boolean).join(', ');
+  const rec={patientName:name,id,date,phone:st.patientPhone,status,ts:Date.now(),kind:isDoc?'doc':'rx',chamberId:P?A().id:'',chamberName:P?A().label:'',
+    diagnosis:isDoc?(DOCS[docType]?DOCS[docType].name:'ডকুমেন্ট'):((status==='Pending Test'?(tests||dx):dx)||'N/A'),medsCount:isDoc?0:st.medicines.length,gender:txt('patientSex')||'M',state:st};
+  const i=appData.savedRecords.findIndex(r=>r.id===id&&(r.status==='Pending Test'||r.date===date)&&(r.kind==='doc')===isDoc);
+  if(i>=0)appData.savedRecords[i]=rec;else appData.savedRecords.unshift(rec);
+  appData.savedRecords.forEach((r,k)=>{if(k>=60)delete r.state;});window.saveAppData();renderStorageTable();
+  if(silent!==true)showToast('আর্কাইভ সংরক্ষিত','রোগী "'+name+'" সফলভাবে স্টোরেজে জমা হয়েছে।');return true;};
+window.renderStorageTable=function(){const tb=$('savedPrescriptionTableBody');if(!tb)return;const q=(($('patSearch')||{}).value||'').trim().toLowerCase(),f=($('chFilter')||{}).value||'';
+  const rs=(appData.savedRecords||[]).map((r,i)=>[r,i]).filter(([r])=>(!q||[r.patientName,r.id,r.phone,r.diagnosis,r.status==='Pending Test'?'pending':''].join(' ').toLowerCase().includes(q))&&(!f||r.chamberId===f));
+  if(!rs.length){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-400">কোনো সংরক্ষিত প্রেসক্রিপশন পাওয়া যায়নি।</td></tr>';return;}
+  tb.innerHTML=rs.map(([r,i])=>`<tr class="hover:bg-slate-50"><td class="p-2.5 font-bold text-slate-800">${esc(r.patientName)}${r.status==='Pending Test'?' <span class="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold">টেস্ট চলছে</span>':''}${r.kind==='doc'?' <span class="bg-violet-100 text-violet-800 text-[9px] px-1.5 py-0.5 rounded font-bold">ডকুমেন্ট</span>':''}${r.chamberName?`<div class="text-[9px] text-slate-400 font-normal">${esc(r.chamberName)}</div>`:''}</td><td class="p-2.5 font-mono text-slate-600">${esc(r.id)}</td><td class="p-2.5 text-slate-500">${esc(r.date)}</td><td class="p-2.5 text-rose-800 font-semibold">${esc(r.diagnosis)}</td><td class="p-2.5 text-right space-x-1.5"><button onclick="restoreArchiveRecord(${i})" class="text-sky-700 hover:text-sky-900 font-bold text-xs" title="লোড করুন"><i class="fa-solid fa-arrow-up-right-from-square"></i> লোড</button><button onclick="deleteArchiveRecord(${i})" class="text-rose-500 hover:text-rose-700 text-xs ml-1"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('');};
+window.restoreArchiveRecord=function(idx){const r=appData.savedRecords[idx];if(!r)return;recordState();
+  if(r.state){const s=Object.assign({},r.state);delete s.header;delete s.footer;restoreState(s);put('rxDate',todayStr());}
+  else{put('patientName',r.patientName);put('patientId',r.id);put('patientSex',r.gender);}
+  switchBottomNav(blankOn?'tabEmergency':'tabPreview');triggerAutoSave();showToast('রেকর্ড লোড হয়েছে',r.state?'রোগী '+r.patientName+'-এর পুরো রেকর্ড লোড হয়েছে (তারিখ আজকের)।':'শুধু নাম/আইডি পাওয়া গেছে (পুরনো রেকর্ড)।');};
+
+/* ---------- start-up ---------- */
+window.initApp=function(){ensureData();populateTemplateDropdown();loadP();loadPrefs();buildDrawer();buildChamberUi();applyAssets();lockScreen();buildDocLists();
+  const tb=$('savedPrescriptionTableBody'),wrap=tb&&tb.closest('.border.rounded-lg');
+  if(wrap){const bx=document.createElement('div');bx.className='grid grid-cols-2 gap-2 mb-2';bx.innerHTML='<input id="patSearch" placeholder="🔍 নাম / ID / ফোন / pending" class="border rounded px-2 py-1.5 text-xs w-full"><select id="chFilter" class="border rounded px-2 py-1.5 text-xs w-full bg-white"></select>';wrap.parentNode.insertBefore(bx,wrap);
+    $('patSearch').oninput=renderStorageTable;$('chFilter').onchange=renderStorageTable;}
+  let st=null;try{st=JSON.parse(localStorage.getItem(ST_KEY)||'null');}catch(e){}
+  if(st&&typeof st==='object')restoreState(st);else{window.newPatient(true);window.applySelectedTemplate('original_14_cardiac');}
+  applyChamberTexts();
+  const today=new Date().getDay(),hit=P.chambers.filter(c=>(c.days||[]).includes(today));
+  if(hit.length===1&&hit[0].id!==P.active&&!txt('patientName')){P.active=hit[0].id;saveP();applyChamberTexts();put('patientId',nextId());showToast('আজকের চেম্বার',hit[0].label);}
+  ['newMedInput','newComplaintInput','newDiagInput','newInvInput','newRefInput','newHistInput'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',()=>{e.value=strip(e.value);});});
+  syncBinds();updateRxCode();undoStack=[];redoStack=[];recordState();if(prefs.thermal)window.toggleThermal(true);
+  switchBottomNav(blankOn?'tabEmergency':'tabPreview');checkAutoZoomFit();renderStorageTable();renderHub();fitHeader();window.addEventListener('resize',fitHeader);};
+})();
+
+</script>
+</body>
+</html>
